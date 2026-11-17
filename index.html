@@ -419,7 +419,7 @@ async function resoudreCover(ref) {
   }
   if (ref.startsWith("drive:")) {
     let bl = await kvGet("covers", ref);
-    if (!(bl instanceof Blob) && jetonValide()) { try { bl = await (await dfetch(DRIVE_API + "/" + ref.slice(6) + "?alt=media")).blob(); await kvSet("covers", ref, bl); } catch (e) { bl = null; } }
+    if (!(bl instanceof Blob) && jetonValide()) { try { bl = await (await dfetch(DRIVE_API + "/" + ref.slice(6) + "?alt=media")).blob(); await kvSet("covers", ref, bl); } catch (e) { bl = null; if (!coverErreur && e.message !== "reconnexion") { coverErreur = true; toast("Pochette Drive illisible : " + e.message, 9000); } } }
     if (bl instanceof Blob) { const u = URL.createObjectURL(bl); urlsObjets.set(ref, u); return u; }
     return "";
   }
@@ -1871,13 +1871,22 @@ async function demanderJeton(interactif) {
     const tc = google.accounts.oauth2.initTokenClient({
       client_id: idClient(), scope: DRIVE_SCOPE,
       callback: r => {
-        if (r && r.access_token) { gd.token = r.access_token; gd.exp = Date.now() + (Number(r.expires_in) || 3600) * 1000; try { localStorage.setItem("vinylection_drive_ok", "1"); } catch (e) {} res(true); }
+        if (r && r.access_token) { gd.token = r.access_token; gd.exp = Date.now() + (Number(r.expires_in) || 3600) * 1000; try { localStorage.setItem("vinylection_drive_ok", "1"); } catch (e) {} res(true); setTimeout(apresJeton, 50); }
         else res(false);
       },
       error_callback: e => { gd.erreur = (e && e.type) || "inconnue"; res(false); }
     });
     tc.requestAccessToken({ prompt: interactif ? "" : "none" });
   });
+}
+/* Jeton obtenu (même tardivement) : on relance l'affichage pour que les pochettes Drive se chargent. */
+let coverErreur = false;
+function apresJeton() {
+  if (!fichier.drive) return;
+  if (fichier.reco) { fichier.reco = false; }
+  majUI();
+  if (fichier.dirty) sauvegarder(false); else rechargerDrive(true).catch(() => {});
+  rendre();
 }
 async function dfetch(url, opts) {
   if (!jetonValide()) { fichier.reco = true; majUI(); throw new Error("reconnexion"); }
