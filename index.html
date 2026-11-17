@@ -327,7 +327,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const pause = ms => new Promise(r => setTimeout(r, ms));
 const cle = v => nk(v.artiste) + "|" + nk(v.titre);
 /* Identifiant client Google (voir le guide) : à coller entre les guillemets avant de publier la page. */
-const GOOGLE_CLIENT_ID = "1026977144464-9crlftedhi2kd62rdquimvkjod36hs05.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "";
 const hasFS = "showOpenFilePicker" in window && "showSaveFilePicker" in window;
 const TYPES_XLSX = [{ description: "Classeur Excel", accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } }];
 
@@ -1795,7 +1795,7 @@ async function ouvrirReglages() {
     "<div><button type='button' id='r-diag'>🩺 Tester les sources</button><div class='diag' id='r-diag-res' hidden></div></div>" +
     "<p style='font-size:.82rem;color:var(--discret)'><b>Amazon, Fnac, Cultura, Vinylmaniaque, Mondo Shop, Edition Collector…</b> n'ont pas d'accès automatique utilisable depuis une page locale. Des liens de recherche pré-remplis s'affichent sous les suggestions pour les consulter à la main.</p>";
   const lire = () => { reglages.token = c.querySelector("#r-token").value.trim();
-    reglages.gclient = c.querySelector("#r-gid").value.trim(); reglages.pays = (c.querySelector("#r-pays").value.trim().toLowerCase() || "fr"); reglages.clip = c.querySelector("#r-clip").checked;
+    reglages.gclient = c.querySelector("#r-gid").value.trim(); preGIS(); reglages.pays = (c.querySelector("#r-pays").value.trim().toLowerCase() || "fr"); reglages.clip = c.querySelector("#r-clip").checked;
     c.querySelectorAll("[data-src]").forEach(x => { reglages.sources[x.dataset.src] = x.checked; }); sauverReglages(); };
   c.querySelector("#r-lib").onclick = () => installerBibliotheque(false);
   c.querySelector("#r-clip-test").onclick = async () => {
@@ -1857,13 +1857,16 @@ window.addEventListener("beforeunload", e => { if (fichier.dirty && lie()) { e.p
 const DRIVE_API = "https://www.googleapis.com/drive/v3/files", DRIVE_UP = "https://www.googleapis.com/upload/drive/v3/files";
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file", MIME_DOSSIER = "application/vnd.google-apps.folder";
 const MIME_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-const gd = { token: "", exp: 0 };
+const gd = { token: "", exp: 0, erreur: "" };
+const URL_GIS = "https://accounts.google.com/gsi/client";
+const preGIS = () => { if (idClient()) chargerScript(URL_GIS).catch(() => {}); };
 const idClient = () => String(GOOGLE_CLIENT_ID || reglages.gclient || "").trim();
 const jetonValide = () => !!gd.token && Date.now() < gd.exp - 60000;
 const lie = () => !!(fichier.handle || fichier.dir || fichier.drive);
 async function demanderJeton(interactif) {
   if (!idClient()) { toast("Identifiant Google manquant : voir Réglages → Google Drive.", 6000); return false; }
-  try { await chargerScript("https://accounts.google.com/gsi/client"); } catch (e) { toast("Google injoignable : " + e.message, 6000); return false; }
+  try { await chargerScript(URL_GIS); } catch (e) { toast("Google injoignable : " + e.message, 6000); return false; }
+  gd.erreur = "";
   return await new Promise(res => {
     const tc = google.accounts.oauth2.initTokenClient({
       client_id: idClient(), scope: DRIVE_SCOPE,
@@ -1871,7 +1874,7 @@ async function demanderJeton(interactif) {
         if (r && r.access_token) { gd.token = r.access_token; gd.exp = Date.now() + (Number(r.expires_in) || 3600) * 1000; try { localStorage.setItem("vinylection_drive_ok", "1"); } catch (e) {} res(true); }
         else res(false);
       },
-      error_callback: () => res(false)
+      error_callback: e => { gd.erreur = (e && e.type) || "inconnue"; res(false); }
     });
     tc.requestAccessToken({ prompt: interactif ? "" : "none" });
   });
@@ -1911,7 +1914,10 @@ async function lierDrive() {
   await attendreXLSX();
   if (typeof XLSX === "undefined") { toast("Bibliothèque Excel non chargée (Internet requis)."); return; }
   if (!idClient()) { toast("Identifiant Google manquant : collez-le dans Réglages → Google Drive.", 7000); ouvrirReglages(); return; }
-  if (!await demanderJeton(true)) { toast("Connexion à Google annulée ou refusée.", 5000); return; }
+  if (!await demanderJeton(true)) {
+    const m = { popup_failed_to_open: "La fenêtre Google a été bloquée par le navigateur : autorisez les pop-ups pour ce site (icône à droite de la barre d'adresse), puis recliquez.",
+      popup_closed: "La fenêtre Google a été fermée avant la fin de la connexion." };
+    toast(m[gd.erreur] || ("Connexion à Google impossible" + (gd.erreur ? " (" + gd.erreur + ")" : "") + ". Si une page d'erreur Google s'est affichée, notez son code (ex. « Erreur 400 : origin_mismatch » ou « access_denied »)."), 12000); return; }
   try {
     toast("Connexion à Drive…");
     const dossier = await dDossier("Vinylection"), pochettes = await dDossier("pochettes", dossier);
@@ -2000,6 +2006,7 @@ async function menuDrive() {
     await sauverCache(); majUI(); toast("Déconnecté de Drive (copie locale conservée).");
   }
 }
+preGIS();
 document.addEventListener("visibilitychange", () => { if (!document.hidden && fichier.drive) rechargerDrive(true).catch(() => {}); });
 setInterval(() => { if (fichier.drive && !fichier.reco && !jetonValide()) { fichier.reco = true; majUI(); } }, 30000);
 
