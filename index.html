@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5b3df5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Ma collection de vinyles</title>
+<style>
+  :root {
+    --bg:#f4f5f7; --carte:#ffffff; --texte:#1d2330; --discret:#667085; --bordure:#dfe3ea;
+    --accent:#5b3df5; --accent-texte:#ffffff; --danger:#d92d20; --ok:#12805c; --alerte:#b54708;
+    --ombre:0 2px 10px rgba(16,24,40,.08);
+  }
+  [data-theme="sombre"] {
+    --bg:#12141a; --carte:#1c1f27; --texte:#eceff4; --discret:#9aa3b2; --bordure:#2e3340;
+    --accent:#8b7bff; --accent-texte:#12141a; --danger:#ff6b5e; --ok:#3ddc97; --alerte:#ffb454;
+    --ombre:0 2px 10px rgba(0,0,0,.4);
+  }
+  * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--texte); line-height:1.4; }
+  header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:12px 20px; background:var(--carte); border-bottom:1px solid var(--bordure); position:sticky; top:0; z-index:20; }
+  header h1 { margin:0; font-size:1.3rem; }
+  .entete-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .puce { font-size:.8rem; padding:5px 10px; border-radius:999px; border:1px solid var(--bordure); color:var(--discret); background:var(--bg); }
+  .puce.ok { color:var(--ok); border-color:var(--ok); }
+  .puce.alerte { color:var(--alerte); border-color:var(--alerte); }
+  .bandeau { margin:16px auto 0; max-width:1240px; padding:12px 16px; border-radius:12px; border:1px solid var(--alerte); color:var(--texte); background:var(--carte); display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .bandeau p { margin:0; flex:1; min-width:240px; font-size:.92rem; }
+  main { max-width:1400px; margin:0 auto; padding:20px; display:flex; flex-direction:column; gap:20px; }
+  details.depliant > summary { cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px; user-select:none; }
+  details.depliant > summary::-webkit-details-marker { display:none; }
+  details.depliant > summary::before { content:"▸"; font-size:1.1rem; color:var(--accent); transition:transform .15s; }
+  details.depliant[open] > summary::before { transform:rotate(90deg); }
+  details.depliant > summary h2 { margin:0; }
+  details.depliant > summary .astuce { color:var(--discret); font-size:.85rem; font-weight:400; }
+  details.depliant[open] > summary { margin-bottom:14px; }
+  details.depliant[open] > summary .astuce { display:none; }
+  section { background:var(--carte); border:1px solid var(--bordure); border-radius:14px; padding:20px; box-shadow:var(--ombre); }
+  section h2 { margin:0 0 14px; font-size:1.15rem; }
+  .grille-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  label { display:flex; flex-direction:column; gap:5px; font-size:.82rem; color:var(--discret); font-weight:600; }
+  input,select { font:inherit; padding:8px 10px; border:1px solid var(--bordure); border-radius:8px; background:var(--bg); color:var(--texte); width:100%; }
+  input[type=checkbox] { width:auto; }
+  input:focus,select:focus,button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  button { font:inherit; font-weight:600; font-size:.9rem; cursor:pointer; border-radius:8px; padding:8px 14px; border:1px solid var(--bordure); background:var(--carte); color:var(--texte); }
+  button.primaire { background:var(--accent); color:var(--accent-texte); border-color:var(--accent); }
+  button.danger { color:var(--danger); border-color:var(--danger); background:transparent; }
+  button.petit { padding:5px 10px; font-size:.8rem; }
+  button:hover { filter:brightness(1.08); }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; align-items:center; }
+  .ligne-couv { display:flex; gap:14px; align-items:flex-start; margin-top:14px; flex-wrap:wrap; }
+  .couv-prev { width:110px; height:110px; border-radius:10px; border:1px solid var(--bordure); object-fit:cover; background:var(--bordure); display:flex; align-items:center; justify-content:center; font-size:2.4rem; color:var(--discret); overflow:hidden; }
+  .couv-prev img { width:100%; height:100%; object-fit:cover; }
+  .couv-alts { display:flex; gap:8px; flex-wrap:wrap; }
+  .couv-alts img { width:54px; height:54px; object-fit:cover; border-radius:6px; border:2px solid transparent; cursor:pointer; background:var(--bordure); }
+  .couv-alts img.choisie { border-color:var(--accent); }
+  .resultats { margin-top:18px; border-top:1px dashed var(--bordure); padding-top:14px; }
+  .resultats h3 { margin:0 0 6px; font-size:1rem; }
+  .etat-sources { font-size:.8rem; color:var(--discret); margin-bottom:10px; }
+  .liens-ext { font-size:.82rem; margin:10px 0 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center; color:var(--discret); }
+  .liens-ext a { color:var(--accent); text-decoration:none; border:1px solid var(--bordure); border-radius:999px; padding:3px 10px; }
+  .liste-res { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px; }
+  .res { display:flex; gap:10px; border:1px solid var(--bordure); border-radius:10px; padding:8px; background:var(--bg); }
+  .res .mini { width:64px; height:64px; border-radius:6px; flex:none; background:var(--bordure); object-fit:cover; display:flex; align-items:center; justify-content:center; color:var(--discret); font-size:1.6rem; overflow:hidden; }
+  .res .mini img { width:100%; height:100%; object-fit:cover; }
+  #res-ocr button { margin:3px 4px 0 0; }
+  .res .txt { flex:1; min-width:0; font-size:.82rem; color:var(--discret); }
+  .res .txt b { color:var(--texte); font-size:.9rem; display:block; }
+  .badge { display:inline-block; font-size:.7rem; padding:1px 7px; border-radius:999px; background:var(--accent); color:var(--accent-texte); margin-right:4px; }
+  .badge.gris { background:var(--bordure); color:var(--texte); }
+  .barre { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .barre h2 { margin:0; }
+  .onglets { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .onglets button { border-radius:999px; }
+  .onglets button.actif { background:var(--accent); color:var(--accent-texte); border-color:var(--accent); }
+  .outils { display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-bottom:12px; }
+  .outils label { min-width:150px; flex:0 1 190px; }
+  .outils .recherche { flex:1 1 280px; }
+  .compteur { color:var(--discret); font-size:.9rem; margin:6px 0 12px; }
+  .groupe h3 { margin:18px 0 10px; font-size:1.05rem; padding-bottom:6px; border-bottom:2px solid var(--bordure); }
+  .groupe h3 span { color:var(--discret); font-weight:500; font-size:.85rem; }
+  .cartes { display:grid; grid-template-columns:repeat(auto-fill,minmax(235px,1fr)); gap:16px; }
+  .carte { border:1px solid var(--bordure); border-radius:12px; overflow:hidden; background:var(--bg); display:flex; flex-direction:column; }
+  .pochette { width:100%; aspect-ratio:1/1; object-fit:cover; background:var(--bordure); display:block; }
+  .sans-pochette { display:flex; align-items:center; justify-content:center; font-size:3.2rem; color:var(--discret); aspect-ratio:1/1; background:var(--bordure); }
+  .corps { padding:11px 13px 13px; display:flex; flex-direction:column; gap:5px; flex:1; }
+  .corps .titre { font-size:1rem; font-weight:700; margin:0; }
+  .corps .artiste { color:var(--accent); font-weight:600; margin:0; }
+  .infos { margin:4px 0 0; padding:0; list-style:none; font-size:.82rem; color:var(--discret); display:grid; gap:2px; }
+  .infos b { color:var(--texte); font-weight:600; }
+  .btns { margin-top:auto; padding-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
+  .mur { display:grid; grid-template-columns:repeat(auto-fill,minmax(var(--mur-taille,170px),1fr)); gap:8px; }
+  .mur img,.mur .sans-pochette { width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; cursor:pointer; display:flex; }
+  .mur .sans-pochette { font-size:2rem; align-items:center; justify-content:center; }
+  table.tableau { width:100%; border-collapse:collapse; font-size:.85rem; }
+  .tableau th,.tableau td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--bordure); vertical-align:middle; }
+  .tableau th { color:var(--discret); font-size:.75rem; text-transform:uppercase; }
+  .tableau img,.tableau .sans-pochette { width:38px; height:38px; border-radius:5px; object-fit:cover; font-size:1.1rem; display:flex; align-items:center; justify-content:center; }
+  .vide { text-align:center; color:var(--discret); padding:30px 10px; }
+  .rv-tete { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .rv-grille { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
+  .rv-carte { border:1px solid var(--bordure); border-radius:10px; padding:10px; background:var(--bg); display:flex; flex-direction:column; gap:6px; }
+  .rv-carte img { width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; }
+  .rv-vign { display:flex; gap:6px; }
+  .rv-vign img { width:calc(33.3% - 4px); aspect-ratio:1/1; object-fit:cover; border-radius:6px; border:2px solid transparent; cursor:pointer; }
+  .rv-vign img.choisie { border-color:var(--accent); }
+  .rv-lens { display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:.78rem; color:var(--discret); border-top:1px dashed var(--bordure); padding-top:8px; }
+  .rv-info { font-size:.78rem; color:var(--discret); min-height:1em; }
+  .rv-carte select { font-size:.8rem; }
+  dialog { border:1px solid var(--bordure); border-radius:14px; background:var(--carte); color:var(--texte); padding:0; width:min(640px,94vw); max-height:90vh; box-shadow:0 10px 40px rgba(0,0,0,.35); }
+  dialog.large { width:min(1000px,96vw); }
+  dialog::backdrop { background:rgba(0,0,0,.5); }
+  .m-tete { padding:16px 20px 0; font-weight:700; font-size:1.1rem; }
+  .m-corps { padding:12px 20px; overflow:auto; max-height:68vh; font-size:.92rem; }
+  .m-pied { padding:12px 20px 18px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+  .m-corps p { margin:0 0 10px; }
+  progress { width:100%; height:14px; }
+  table.revue { width:100%; border-collapse:collapse; font-size:.84rem; }
+  .revue td,.revue th { padding:7px 6px; border-bottom:1px solid var(--bordure); vertical-align:top; text-align:left; }
+  .revue img,.revue .sans-pochette { width:54px; height:54px; border-radius:6px; object-fit:cover; font-size:1.4rem; display:flex; align-items:center; justify-content:center; }
+  .revue .avant { color:var(--discret); text-decoration:line-through; }
+  .revue .chg { display:block; }
+  .reglage { display:grid; gap:12px; }
+  .diag { background:var(--bg); border:1px solid var(--bordure); border-radius:8px; padding:10px; font-size:.82rem; white-space:pre-wrap; margin-top:8px; }
+  #toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--texte); color:var(--bg); padding:10px 18px; border-radius:10px; font-size:.9rem; z-index:100; max-width:90vw; box-shadow:0 6px 24px rgba(0,0,0,.3); }
+  footer { text-align:center; color:var(--discret); font-size:.8rem; padding:0 20px 24px; }
+
+  /* ---------- Téléphone ---------- */
+  @media (max-width:700px) {
+    header { padding:8px 12px; gap:6px; position:sticky; top:0; z-index:20; }
+    header h1 { font-size:1.05rem; }
+    .entete-actions { gap:6px; width:100%; }
+    .entete-actions .puce { flex:1 1 100%; text-align:center; order:-1; font-size:.75rem; }
+    #btn-dossier, #btn-importer { display:none; }
+    button, select, input:not([type=checkbox]):not([type=radio]):not([type=range]) { min-height:44px; font-size:16px; }
+    main { padding:10px; gap:12px; }
+    .grille-form { grid-template-columns:1fr; }
+    .barre { gap:8px; }
+    .mur { gap:6px; }
+    #bandeau { flex-direction:column; align-items:stretch; }
+    #bandeau button { width:100%; }
+    .tableau-scroll, .vue-tableau { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    dialog, .dialogue { max-width:96vw; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💿 Ma collection de vinyles</h1>
+  <div class="entete-actions">
+    <span id="puce-fichier" class="puce">Aucun fichier lié</span>
+    <button id="btn-drive" type="button" class="primaire">☁ Google Drive</button>
+    <button id="btn-dossier" type="button">📁 Mon dossier</button>
+    <button id="btn-importer" type="button">⬆ Importer un ancien Excel</button>
+    <button id="btn-sauver" type="button">💾 Enregistrer</button>
+    <button id="btn-reglages" type="button">⚙ Réglages</button>
+    <button id="btn-theme" type="button" aria-label="Changer de thème">🌙</button>
+  </div>
+</header>
+
+<div id="bandeau" class="bandeau" hidden></div>
+<input type="file" id="input-fichier" accept=".xlsx,.xls" hidden>
+<input type="file" id="input-import" accept=".xlsx,.xls" hidden>
+
+<main>
+  <section aria-labelledby="titre-ajout">
+   <details class="depliant" id="bloc-ajout">
+    <summary><h2 id="titre-ajout"><span id="titre-form">Ajouter un vinyle</span></h2><span class="astuce">cliquez pour dérouler le formulaire</span></summary>
+    <p style="margin:-6px 0 14px;color:var(--discret);font-size:.9rem">Tapez l'<b>artiste</b> et/ou le <b>titre</b> : des suggestions apparaissent automatiquement. Cliquez sur « Utiliser », vérifiez, puis validez.</p>
+    <div class="actions" style="margin:0 0 14px">
+      <button type="button" id="btn-photo-cam">📷 Photo (webcam)</button>
+      <button type="button" id="btn-photo-fichier">🖼 Photo depuis un fichier</button>
+      <button type="button" id="btn-video">🎞 Scanner une vidéo</button>
+      <input type="file" id="input-photo" accept="image/*" capture="environment" hidden>
+      <input type="file" id="input-video" accept="video/*" hidden>
+    </div>
+    <form id="formulaire" autocomplete="off">
+      <div class="grille-form">
+        <label>Artiste *<input name="artiste" required></label>
+        <label>Titre *<input name="titre" required></label>
+        <label>Statut
+          <select name="statut"><option value="possede">Possédé</option><option value="souhaite">Souhaité</option></select>
+        </label>
+        <label>Année<input name="annee" type="number" min="1900" max="2100"></label>
+        <label>Label<input name="label"></label>
+        <label>Format
+          <select name="format">
+            <option value="">— Choisir —</option>
+            <option>LP 12"</option><option>Double LP 12"</option><option>EP</option><option>Maxi 12"</option>
+            <option>10"</option><option>Single 7"</option><option>Coffret</option><option>Autre</option>
+          </select>
+        </label>
+        <label>Édition<input name="edition" placeholder="ex. Réédition, Limitée, vinyle bleu"></label>
+        <label>Numéro de catalogue<input name="catalogue"></label>
+        <label>Pays<input name="pays"></label>
+        <label>Genre<input name="genre"></label>
+        <label>Style<input name="style"></label>
+        <label>Catégorie<input name="categorie" list="liste-categories" placeholder="ex. Divers, B.O…"></label>
+        <label>Emplacement<input name="emplacement" placeholder="ex. Étagère 2, bac A"></label>
+      </div>
+      <datalist id="liste-categories"></datalist>
+
+      <div class="ligne-couv">
+        <div class="couv-prev" id="couv-prev">💿</div>
+        <div>
+          <div style="font-size:.82rem;color:var(--discret);font-weight:600;margin-bottom:6px">Pochette</div>
+          <div class="couv-alts" id="couv-alts"></div>
+          <div class="actions" style="margin-top:8px">
+            <button type="button" class="petit" id="btn-couv-fichier">📁 Choisir une image sur mon PC</button>
+            <button type="button" class="petit" id="btn-couv-retirer">Retirer</button>
+            <input type="file" id="input-couv" accept="image/*" hidden>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primaire" id="btn-valider">Ajouter à la collection</button>
+        <button type="button" id="btn-chercher">🔍 Rechercher les infos</button>
+        <button type="button" id="btn-annuler-edit" hidden>Annuler la modification</button>
+        <button type="reset" id="btn-reset">Vider</button>
+      </div>
+    </form>
+
+    <div class="resultats" id="resultats" hidden>
+      <h3>Suggestions trouvées</h3>
+      <div id="res-ocr" style="margin-bottom:10px;font-size:.85rem"></div>
+      <div class="etat-sources" id="res-etat"></div>
+      <div class="liste-res" id="res-liste"></div>
+      <div class="liens-ext" id="res-liens"></div>
+    </div>
+   </details>
+  </section>
+
+  <section aria-labelledby="titre-collection">
+    <div class="barre">
+      <h2 id="titre-collection">Ma collection</h2>
+      <div class="actions" style="margin:0">
+        <button id="btn-completer" type="button">✨ Compléter automatiquement</button>
+        <button id="btn-export" type="button" class="primaire">Exporter en Excel (.xlsx)</button>
+      </div>
+    </div>
+    <div class="onglets" id="onglets">
+      <button type="button" data-onglet="tous">Tous</button>
+      <button type="button" data-onglet="possede" class="actif">Possédés</button>
+      <button type="button" data-onglet="souhaite">Souhaités</button>
+    </div>
+    <div class="outils">
+      <label class="recherche">Recherche
+        <input id="recherche" type="search" placeholder="🔍 artiste, titre, label, genre, année, emplacement…">
+      </label>
+      <label>Trier par
+        <select id="tri">
+          <option value="artiste">Artiste (A→Z)</option>
+          <option value="titre">Titre (A→Z)</option>
+          <option value="annee">Année (ancien → récent)</option>
+          <option value="annee-desc">Année (récent → ancien)</option>
+          <option value="genre">Genre</option>
+          <option value="label">Label</option>
+          <option value="ajoute-desc">Derniers ajoutés</option>
+        </select>
+      </label>
+      <label>Regrouper par
+        <select id="groupe">
+          <option value="aucun">Pas de regroupement</option>
+          <option value="categorie">Catégorie</option>
+          <option value="genre" selected>Genre</option>
+          <option value="style">Style</option>
+          <option value="decennie">Décennie</option>
+          <option value="annee">Année</option>
+          <option value="label">Label</option>
+          <option value="format">Format</option>
+          <option value="pays">Pays</option>
+          <option value="artiste">Initiale de l'artiste</option>
+          <option value="emplacement">Emplacement</option>
+          <option value="statut">Statut</option>
+        </select>
+      </label>
+      <label>Affichage
+        <select id="vue">
+          <option value="cartes">Cartes détaillées</option>
+          <option value="mur" selected>Mur de pochettes</option>
+          <option value="tableau">Tableau</option>
+        </select>
+      </label>
+      <label id="lab-taille" hidden>Taille des pochettes (<span id="taille-val">170</span> px)
+        <input type="range" id="taille" min="60" max="320" step="10" value="170">
+      </label>
+    </div>
+    <div id="compteur" class="compteur"></div>
+    <div id="liste"></div>
+  </section>
+</main>
+
+<footer>Vos vinyles sont enregistrés dans votre fichier Excel sur votre PC (et en copie dans ce navigateur). Aucun serveur, aucun compte.</footer>
+
+<dialog id="modal">
+  <div class="m-tete" id="modal-titre"></div>
+  <div class="m-corps" id="modal-corps"></div>
+  <div class="m-pied" id="modal-pied"></div>
+</dialog>
+<div id="toast" hidden></div>
+
+<!-- SheetJS (lecture/écriture Excel) : copie locale xlsx.full.min.js (dossier transportable), sinon CDN -->
+<script>function chargerSheetJSCdn(){var s=document.createElement("script");s.src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";document.head.appendChild(s);}</script>
+<script src="xlsx.full.min.js" onerror="chargerSheetJSCdn()"></script>
+
+<script>
+(function () {
+"use strict";
+
+/* =====================================================================
+   Utilitaires
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const norm = s => String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const nk = s => norm(s).replace(/[^a-z0-9]/g, "");
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const today = () => new Date().toISOString().slice(0, 10);
+const pause = ms => new Promise(r => setTimeout(r, ms));
+const cle = v => nk(v.artiste) + "|" + nk(v.titre);
+/* Identifiant client Google (voir le guide) : à coller entre les guillemets avant de publier la page. */
+const GOOGLE_CLIENT_ID = "";
+const hasFS = "showOpenFilePicker" in window && "showSaveFilePicker" in window;
+const TYPES_XLSX = [{ description: "Classeur Excel", accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } }];
+
+let toastTimer = null;
+function toast(msg, ms) {
+  const t = $("toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, ms || 3800);
+}
+window.addEventListener("error", e => { console.error(e.error || e.message); });
+window.addEventListener("unhandledrejection", e => { console.error(e.reason); });
+
+/* =====================================================================
+   Modèle de données
+   ===================================================================== */
+const COLS = [
+  ["statut","Statut"],["artiste","Artiste"],["titre","Titre"],["annee","Année"],["label","Label"],
+  ["format","Format"],["edition","Édition"],["catalogue","N° de catalogue"],["pays","Pays"],
+  ["genre","Genre"],["style","Style"],["categorie","Catégorie"],["emplacement","Emplacement"],
+  ["pochette","Pochette"],["ajoute","Ajouté le"]
+];
+const SYN = {
+  statut:["statut","etat"], artiste:["artiste","artist","interprete"],
+  titre:["titre","titredelalbum","titrealbum","album","title"], annee:["annee","year","anneedesortie"],
+  label:["label","maisondedisques"], format:["format","support"], edition:["edition","pressage","version"],
+  catalogue:["ndecatalogue","numerodecatalogue","ncatalogue","nocatalogue","catalogue","catno","reference"],
+  pays:["pays","country"], genre:["genre"], style:["style"], categorie:["categorie","category"],
+  emplacement:["emplacement","rangement","localisation","location"],
+  pochette:["pochetteurl","pochette","cover","image","imageurl"], ajoute:["ajoutele","ajoute","dateajout"]
+};
+const CHAMPS_FICHE = ["annee","label","format","edition","catalogue","pays","genre","style"];
+const CHAMPS_RECH = ["artiste","titre","label","genre","style","categorie","annee","emplacement","catalogue","pays","format","edition"];
+
+function mkVinyle(o) {
+  const v = { id: uid(), statut: "possede", artiste: "", titre: "", annee: "", label: "", format: "", edition: "",
+              catalogue: "", pays: "", genre: "", style: "", categorie: "", emplacement: "", pochette: "",
+              ajoute: today(), extra: {} };
+  for (const k in o) {
+    if (o[k] == null || k === "extra") continue;
+    v[k] = typeof o[k] === "string" ? o[k].trim() : String(o[k]);
+  }
+  if (o.extra) v.extra = o.extra;
+  return v;
+}
+
+let vinyles = [];
+let onglet = "possede";
+let editId = null;
+let fichier = { drive: null, handle: null, dir: null, nom: "", dirty: false, reco: false, derniere: null };
+
+/* =====================================================================
+   Réglages (localStorage) et stockage navigateur (IndexedDB)
+   ===================================================================== */
+let reglages = { gclient: "", token: "", clip: false, pays: "fr", sources: { discogs: true, musicbrainz: true, deezer: true, itunes: true } };
+try {
+  const s = JSON.parse(localStorage.getItem("vinylection_reglages") || "null");
+  if (s) { reglages.token = s.token || ""; reglages.gclient = s.gclient || ""; reglages.clip = !!s.clip; reglages.pays = s.pays || "fr"; Object.assign(reglages.sources, s.sources || {}); }
+} catch (e) {}
+function sauverReglages() { try { localStorage.setItem("vinylection_reglages", JSON.stringify(reglages)); } catch (e) {} }
+
+let dbp = null;
+function ouvrirDB() {
+  return new Promise((res, rej) => {
+    let r; try { r = indexedDB.open("vinylection", 1); } catch (e) { rej(e); return; }
+    r.onupgradeneeded = () => { const d = r.result; d.createObjectStore("kv"); d.createObjectStore("covers"); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+const db = () => dbp || (dbp = ouvrirDB());
+async function kvGet(store, key) {
+  try { const d = await db(); return await new Promise(res => { const q = d.transaction(store).objectStore(store).get(key); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); }); }
+  catch (e) { return undefined; }
+}
+async function kvSet(store, key, val) {
+  try { const d = await db(); return await new Promise(res => { const t = d.transaction(store, "readwrite"); t.objectStore(store).put(val, key); t.oncomplete = () => res(true); t.onerror = () => res(false); }); }
+  catch (e) { return false; }
+}
+const sauverCache = () => { if (fichier.drive) kvSet("kv", "drive", fichier.drive); return kvSet("kv", "etat", { vinyles, nom: fichier.nom, dirty: fichier.dirty }); };
+
+/* =====================================================================
+   Pochettes : cache local, réduction des images envoyées depuis le PC
+   ===================================================================== */
+const urlsObjets = new Map(), tentes = new Set();
+async function resoudreCover(ref) {
+  if (!ref) return "";
+  if (urlsObjets.has(ref)) return urlsObjets.get(ref);
+  if (/^pochettes\//.test(ref)) {
+    if (fichier.dir) { try { const f = await lireDansDossier(ref); const u = URL.createObjectURL(f); urlsObjets.set(ref, u); return u; } catch (e) { /* pas encore accessible */ } }
+    return "";
+  }
+  if (ref.startsWith("drive:")) {
+    let bl = await kvGet("covers", ref);
+    if (!(bl instanceof Blob) && jetonValide()) { try { bl = await (await dfetch(DRIVE_API + "/" + ref.slice(6) + "?alt=media")).blob(); await kvSet("covers", ref, bl); } catch (e) { bl = null; } }
+    if (bl instanceof Blob) { const u = URL.createObjectURL(bl); urlsObjets.set(ref, u); return u; }
+    return "";
+  }
+  const b = await kvGet("covers", ref);
+  if (b instanceof Blob) { const u = URL.createObjectURL(b); urlsObjets.set(ref, u); return u; }
+  if (ref.startsWith("local:")) return "";
+  if (!tentes.has(ref)) { tentes.add(ref); mettreEnCache(ref); }
+  return ref;
+}
+async function mettreEnCache(ref) {
+  if (!ref || ref.startsWith("local:")) return;
+  try {
+    const r = await fetch(ref, { mode: "cors" });
+    if (!r.ok) return;
+    const b = await r.blob();
+    if (b.size > 0 && b.size < 4e6 && /^image\//.test(b.type)) await kvSet("covers", ref, b);
+  } catch (e) { /* le cache est facultatif */ }
+}
+function reduireImage(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onerror = () => rej(new Error("Lecture impossible"));
+    fr.onload = () => {
+      const img = new Image();
+      img.onerror = () => rej(new Error("Image illisible"));
+      img.onload = () => {
+        const r = Math.min(1, 600 / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(b => b ? res(b) : rej(new Error("Conversion impossible")), "image/jpeg", 0.85);
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+function placeholder(cls) { const d = document.createElement("div"); d.className = cls || "sans-pochette"; d.textContent = "💿"; return d; }
+function hydrater(racine) {
+  racine.querySelectorAll("img[data-ref]").forEach(img => {
+    const ref = img.dataset.ref;
+    img.addEventListener("error", () => { if (img.isConnected) img.replaceWith(placeholder(img.dataset.ph)); }, { once: true });
+    resoudreCover(ref).then(u => { if (u) img.src = u; else if (img.isConnected) img.replaceWith(placeholder(img.dataset.ph)); });
+  });
+}
+function imgRef(ref, cls, alt, ph) {
+  const i = document.createElement("img"); i.dataset.ref = ref; i.className = cls || ""; i.alt = alt || ""; i.loading = "lazy";
+  if (ph) i.dataset.ph = ph; return i;
+}
+
+/* =====================================================================
+   Fenêtres de dialogue
+   ===================================================================== */
+function dialogue({ titre, html, boutons, large }) {
+  return new Promise(res => {
+    const d = $("modal"); let choix = null;
+    $("modal-titre").textContent = titre || "";
+    const c = $("modal-corps");
+    if (typeof html === "string") c.innerHTML = html; else { c.textContent = ""; c.appendChild(html); }
+    const pied = $("modal-pied"); pied.textContent = "";
+    (boutons || [["OK", true, "primaire"]]).forEach(([lib, val, cls, action]) => {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = lib; if (cls) b.className = cls;
+      b.onclick = () => { if (action) { action(); return; } choix = val; d.close(); }; pied.appendChild(b);
+    });
+    d.className = large ? "large" : "";
+    d.onclose = () => res(choix);
+    d.showModal();
+  });
+}
+async function fermerDialogue() { const d = $("modal"); if (d.open) d.close(); await pause(80); }
+
+/* =====================================================================
+   Lecture / écriture Excel
+   ===================================================================== */
+function cellStr(val, k) {
+  if (val == null || val === "") return "";
+  if (val instanceof Date) return k === "annee" ? String(val.getFullYear()) : val.toISOString().slice(0, 10);
+  return String(val).trim();
+}
+function lireFlat(rows) {
+  const head = rows[0].map(nk), map = {};
+  head.forEach((h, i) => { for (const k in SYN) if (map[k] == null && SYN[k].includes(h)) { map[k] = i; break; } });
+  const connus = new Set(Object.values(map)), out = [];
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r], o = { extra: {} };
+    for (const k in map) o[k] = cellStr(row[map[k]], k);
+    row.forEach((val, i) => { if (!connus.has(i) && head[i] && val !== "" && val != null) o.extra[String(rows[0][i])] = val; });
+    if (!o.artiste && !o.titre) continue;
+    if (o.statut) o.statut = /souhait|wish|want/.test(norm(o.statut)) ? "souhaite" : "possede"; else delete o.statut;
+    out.push(mkVinyle(o));
+  }
+  return out;
+}
+/* Ancien format "Ma Collec' de Vinyles" : blocs Artiste / Titre / Catégorie côte à côte,
+   catégories en cellules fusionnées, bloc « possédés » et bloc « souhaités ». */
+function lireAncien(ws) {
+  if (!ws || !ws["!ref"]) return null;
+  const ref = XLSX.utils.decode_range(ws["!ref"]), merges = ws["!merges"] || [];
+  const val = (r, c) => {
+    for (const m of merges) if (r >= m.s.r && r <= m.e.r && c >= m.s.c && c <= m.e.c) { r = m.s.r; c = m.s.c; break; }
+    const cell = ws[XLSX.utils.encode_cell({ r, c })];
+    return cell && cell.v != null ? String(cell.v).trim() : "";
+  };
+  let hr = -1;
+  for (let r = ref.s.r; r <= Math.min(ref.e.r, 40) && hr < 0; r++)
+    for (let c = ref.s.c; c <= ref.e.c; c++) if (/^artiste/.test(norm(val(r, c)))) { hr = r; break; }
+  if (hr < 0) return null;
+  const blocs = [];
+  for (let c = ref.s.c; c <= ref.e.c; c++) if (/^artiste/.test(norm(val(hr, c)))) blocs.push({ a: c });
+  blocs.forEach((b, i) => {
+    const fin = i + 1 < blocs.length ? blocs[i + 1].a : ref.e.c + 1;
+    for (let c = b.a + 1; c < fin; c++) {
+      const h = norm(val(hr, c));
+      if (b.t == null && /titre|album/.test(h)) b.t = c; else if (b.k == null && /categor|genre|style/.test(h)) b.k = c;
+    }
+    b.s = "possede";
+    for (let r = Math.max(ref.s.r, hr - 4); r < hr; r++)
+      for (let c = Math.max(0, b.a - 1); c <= b.a + 1; c++) {
+        const t = norm(val(r, c));
+        if (/souhait|wish/.test(t)) b.s = "souhaite"; else if (/possed/.test(t)) b.s = "possede";
+      }
+  });
+  const out = [];
+  blocs.forEach(b => {
+    if (b.t == null) return;
+    for (let r = hr + 1; r <= ref.e.r; r++) {
+      const a = val(r, b.a), t = val(r, b.t);
+      if (!a && !t) continue;
+      out.push(mkVinyle({ statut: b.s, artiste: a, titre: t, categorie: b.k != null ? val(r, b.k) : "" }));
+    }
+  });
+  return out;
+}
+function analyser(buf) {
+  if (typeof XLSX === "undefined") throw new Error("La bibliothèque Excel (SheetJS) n'est pas chargée : connectez-vous à Internet une fois, ou placez xlsx.full.min.js à côté de index.html.");
+  const wb = XLSX.read(buf, { type: "array", cellDates: true });
+  const nom = wb.SheetNames.includes("Collection") ? "Collection" : wb.SheetNames[0];
+  const ws = wb.Sheets[nom];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "", blankrows: false });
+  const head = (rows[0] || []).map(nk);
+  if (head.some(h => SYN.artiste.includes(h)) && head.some(h => SYN.titre.includes(h))) return { type: "plat", vinyles: lireFlat(rows) };
+  const anc = lireAncien(ws);
+  if (anc) return { type: "ancien", vinyles: anc };
+  throw new Error("Format de fichier non reconnu (colonnes « Artiste » et « Titre » introuvables).");
+}
+function construireClasseur() {
+  const extraCols = [];
+  vinyles.forEach(v => Object.keys(v.extra || {}).forEach(k => { if (!extraCols.includes(k)) extraCols.push(k); }));
+  const head = COLS.map(c => c[1]).concat(extraCols);
+  const lignes = vinyles.map(v => {
+    const o = {};
+    COLS.forEach(([k, l]) => {
+      let x = v[k];
+      if (k === "statut") x = v.statut === "souhaite" ? "Souhaité" : "Possédé";
+      if (k === "annee" && /^\d{4}$/.test(x)) x = Number(x);
+      o[l] = x;
+    });
+    extraCols.forEach(k => { o[k] = (v.extra && v.extra[k] != null) ? v.extra[k] : ""; });
+    return o;
+  });
+  const ws = XLSX.utils.json_to_sheet(lignes, { header: head });
+  ws["!cols"] = head.map(h => ({ wch: Math.min(45, Math.max(h.length + 2, ...lignes.map(l => String(l[h] == null ? "" : l[h]).length + 2))) }));
+  ws["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(lignes.length, 1), c: head.length - 1 } }) };
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Collection");
+  return wb;
+}
+async function ecrireFichier() {
+  await attendreXLSX();
+  const out = XLSX.write(construireClasseur(), { type: "array", bookType: "xlsx" });
+  const w = await fichier.handle.createWritable();
+  await w.write(new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  await w.close();
+}
+async function telecharger() {
+  await attendreXLSX();
+  if (typeof XLSX === "undefined") { toast("Bibliothèque Excel non chargée (connexion Internet requise au premier lancement)."); return; }
+  const j = new Date(), p = n => String(n).padStart(2, "0");
+  XLSX.writeFile(construireClasseur(), "collection-vinyles-" + j.getFullYear() + "-" + p(j.getMonth() + 1) + "-" + p(j.getDate()) + ".xlsx");
+}
+
+/* =====================================================================
+   Fichier lié sur le PC (File System Access API : Chrome / Edge)
+   ===================================================================== */
+async function permission(h, demander) {
+  try {
+    let p = await h.queryPermission({ mode: "readwrite" });
+    if (p === "granted") return true;
+    if (demander) { p = await h.requestPermission({ mode: "readwrite" }); return p === "granted"; }
+  } catch (e) {}
+  return false;
+}
+let tSauve = null;
+function changed() { fichier.dirty = true; majPuce(); clearTimeout(tSauve); tSauve = setTimeout(() => sauvegarder(false), 500); }
+async function sauvegarder(manuel) {
+  await sauverCache();
+  if (fichier.drive) return sauvegarderDrive(manuel);
+  if (fichier.handle || fichier.dir) {
+    if (await permission(fichier.dir || fichier.handle, manuel)) {
+      try {
+        if (!fichier.handle) fichier.handle = await fichier.dir.getFileHandle(NOM_XLSX, { create: true });
+        await ecrireFichier(); fichier.dirty = false; fichier.derniere = new Date(); fichier.reco = false; await sauverCache();
+        if (fichier.dir) rapatrierPochettes();
+      }
+      catch (e) { toast("Écriture impossible : " + e.message + " — fermez le fichier dans Excel puis cliquez sur « Enregistrer ».", 7000); }
+    } else fichier.reco = true;
+  }
+  majPuce(); majBandeau();
+}
+async function ouvrirFichier() {
+  if (!hasFS) { $("input-fichier").click(); return; }
+  try {
+    const [h] = await showOpenFilePicker({ id: "vinylection", types: TYPES_XLSX });
+    await ouvrirHandle(h);
+  } catch (e) { if (e.name !== "AbortError") toast("Erreur : " + e.message, 6000); }
+}
+async function ouvrirHandle(h) {
+  await attendreXLSX();
+  if (!await permission(h, true)) { toast("Autorisation d'écriture refusée."); return; }
+  const f = await h.getFile();
+  let res; try { res = analyser(await f.arrayBuffer()); } catch (e) { toast(e.message, 7000); return; }
+  if (res.type === "ancien") { await proposerImport(res.vinyles, f.name); return; }
+  vinyles = res.vinyles;
+  fichier = { handle: h, dir: null, nom: h.name, dirty: false, reco: false, derniere: null };
+  await kvSet("kv", "dir", null); await kvSet("kv", "handle", h); await sauverCache();
+  majUI(); rendre(); toast("« " + h.name + " » ouvert : " + vinyles.length + " vinyle(s).");
+}
+async function nouveauFichier() {
+  if (!hasFS) { toast("Ce navigateur ne peut pas lier un fichier : utilisez « Enregistrer » pour télécharger. (Chrome ou Edge recommandés)", 6000); return false; }
+  try {
+    const h = await showSaveFilePicker({ id: "vinylection", suggestedName: "Ma-collection-vinyles.xlsx", types: TYPES_XLSX });
+    if (!await permission(h, true)) return false;
+    fichier = { handle: h, dir: null, nom: h.name, dirty: true, reco: false, derniere: null };
+    await kvSet("kv", "dir", null); await kvSet("kv", "handle", h);
+    await sauvegarder(true); majUI(); toast("Fichier « " + h.name + " » créé et lié.");
+    return true;
+  } catch (e) { if (e.name !== "AbortError") toast("Erreur : " + e.message, 6000); return false; }
+}
+async function reconnecter() {
+  if (fichier.drive) {
+    if (!await demanderJeton(true)) { toast("Connexion à Google refusée."); return; }
+    fichier.reco = false; majUI();
+    try { if (fichier.dirty) await sauvegarder(false); else await rechargerDrive(true); rapatrierDrive(); } catch (e) { toast(e.message); }
+    rendre(); return;
+  }
+  const h = fichier.dir || fichier.handle; if (!h) return;
+  if (!await permission(h, true)) { toast("Autorisation refusée."); return; }
+  if (fichier.dir) { try { fichier.handle = await fichier.dir.getFileHandle(NOM_XLSX, { create: true }); } catch (e) { toast("Dossier inaccessible : " + e.message, 6000); return; } }
+  fichier.reco = false;
+  if (fichier.dirty) {
+    const c = await dialogue({ titre: "Modifications non enregistrées", html: "<p>Des modifications faites dans cette page n'ont pas encore été écrites dans « " + esc(fichier.nom) + " ».</p>",
+      boutons: [["Les enregistrer dans le fichier", "ecrire", "primaire"], ["Recharger le fichier tel quel", "charger"], ["Annuler", null]] });
+    if (!c) { fichier.reco = true; return; }
+    if (c === "ecrire") { await sauvegarder(true); majUI(); rendre(); return; }
+  }
+  try { await attendreXLSX(); const f = await fichier.handle.getFile(); const res = analyser(await f.arrayBuffer()); if (res.type === "plat") { vinyles = res.vinyles; fichier.dirty = false; await sauverCache(); } }
+  catch (e) { toast(e.message, 6000); }
+  majUI(); rendre();
+}
+async function boutonSauver() {
+  if (lie()) { await sauvegarder(true); toast(fichier.reco ? "Autorisation nécessaire." : "✔ Enregistré dans « " + fichier.nom + " »"); }
+  else if (hasFS) await ouvrirDossier();
+  else telecharger();
+}
+function majPuce() {
+  const p = $("puce-fichier");
+  p.className = "puce";
+  if (lie()) {
+    if (fichier.reco) { p.textContent = "⚠ « " + fichier.nom + " » : reconnexion nécessaire"; p.classList.add("alerte"); }
+    else if (fichier.dirty) { p.textContent = "⏳ Enregistrement dans « " + fichier.nom + " »…"; p.classList.add("alerte"); }
+    else { p.textContent = (fichier.drive ? "☁ Drive : « " : "📄 « ") + fichier.nom + " » ✔ enregistré" + (fichier.derniere ? " à " + fichier.derniere.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : ""); p.classList.add("ok"); }
+  } else p.textContent = hasFS ? "Aucun dossier lié (copie dans le navigateur)" : "Copie dans le navigateur uniquement";
+}
+function majBandeau() {
+  const b = $("bandeau"); b.textContent = "";
+  const msg = (t, btns) => {
+    const p = document.createElement("p"); p.innerHTML = t; b.appendChild(p);
+    (btns || []).forEach(([l, f, cls]) => { const x = document.createElement("button"); x.type = "button"; x.textContent = l; if (cls) x.className = cls; x.onclick = f; b.appendChild(x); });
+    b.hidden = false;
+  };
+  if (fichier.drive && fichier.reco) msg("<b>Session Google expirée</b> (elle dure environ une heure). Touchez le bouton pour vous reconnecter : vos modifications seront alors enregistrées.", [["🔗 Se reconnecter à Google", reconnecter, "primaire"]]);
+  else if (fichier.drive) b.hidden = true;
+  else if (!hasFS) msg("<b>Cette collection n'est pas encore liée à Google Drive.</b> Sans lien, les données restent seulement dans ce navigateur.", [["☁ Se connecter à Google Drive", lierDrive, "primaire"]]);
+  else if (!lie()) msg("<b>Aucun dossier lié.</b> Cliquez sur « Mon dossier » et choisissez le dossier qui contient (ou contiendra) index.html, le fichier Excel et les pochettes. En attendant, vos données ne sont gardées que dans ce navigateur.",
+    [["📁 Choisir mon dossier", ouvrirDossier, "primaire"], ["☁ Google Drive", lierDrive], ["⬆ Importer mon ancien Excel", () => $("input-import").click()], ["Fichier Excel seul…", ouvrirFichier]]);
+  else if (fichier.reco) msg("<b>Reconnexion nécessaire :</b> le navigateur demande de réautoriser l'accès à « " + esc(fichier.nom) + " » (une fois par session).", [["🔗 Reconnecter", reconnecter, "primaire"]]);
+  else b.hidden = true;
+}
+function majUI() { majPuce(); majBandeau(); }
+
+/* =====================================================================
+   Import d'un ancien Excel
+   ===================================================================== */
+async function proposerImport(liste, nom) {
+  const nbP = liste.filter(v => v.statut === "possede").length, nbS = liste.length - nbP;
+  const choix = await dialogue({ titre: "Importer « " + nom + " »",
+    html: "<p><b>" + liste.length + " vinyle(s)</b> trouvé(s) : " + nbP + " possédé(s), " + nbS + " souhaité(s).</p>" +
+          "<p>Votre fichier d'origine n'est <b>jamais modifié</b> : les données sont enregistrées dans votre fichier de collection.</p>",
+    boutons: [["Importer et compléter automatiquement", "complete", "primaire"], ["Importer seulement", "seul"], ["Annuler", null]] });
+  if (!choix) return;
+  let n = 0;
+  liste.forEach(v => { if (!vinyles.some(x => cle(x) === cle(v) && x.statut === v.statut)) { vinyles.push(v); n++; } });
+  changed(); rendre(); toast(n + " vinyle(s) importé(s).");
+  if (hasFS && !fichier.handle) {
+    await pause(120);
+    const c = await dialogue({ titre: "Où enregistrer votre collection ?",
+      html: "<p>Choisissez un emplacement sur votre PC (par exemple <i>Documents</i>) pour le fichier Excel de votre collection. La page l'ouvrira et le mettra à jour automatiquement.</p>",
+      boutons: [["Choisir l'emplacement", "oui", "primaire"], ["Plus tard", null]] });
+    if (c) await nouveauFichier();
+  }
+  if (choix === "complete") { await pause(120); await completerCollection(); }
+}
+async function importerFichier(file) {
+  await attendreXLSX();
+  try { const res = analyser(await file.arrayBuffer()); await proposerImport(res.vinyles, file.name); }
+  catch (e) { toast(e.message, 7000); }
+}
+
+/* =====================================================================
+   Recherche d'informations : Discogs, MusicBrainz, Deezer, iTunes
+   ===================================================================== */
+const PAYS_EN = {"UK":"Royaume-Uni","US":"États-Unis","USA":"États-Unis","Germany":"Allemagne","Japan":"Japon","Italy":"Italie","Spain":"Espagne","Netherlands":"Pays-Bas","Australia":"Australie","Brazil":"Brésil","Sweden":"Suède","Belgium":"Belgique","Switzerland":"Suisse","Europe":"Europe","Canada":"Canada","Portugal":"Portugal","Ireland":"Irlande","Austria":"Autriche","Denmark":"Danemark","Norway":"Norvège","Finland":"Finlande","Mexico":"Mexique","Poland":"Pologne","Russia":"Russie","Argentina":"Argentine","New Zealand":"Nouvelle-Zélande","Worldwide":"Monde","UK & Europe":"Royaume-Uni et Europe","USA & Canada":"États-Unis et Canada","France":"France"};
+const PAYS_CODE = {FR:"France",GB:"Royaume-Uni",US:"États-Unis",DE:"Allemagne",JP:"Japon",IT:"Italie",ES:"Espagne",NL:"Pays-Bas",CA:"Canada",AU:"Australie",BR:"Brésil",SE:"Suède",BE:"Belgique",CH:"Suisse",XE:"Europe",XW:"Monde",PT:"Portugal",IE:"Irlande",AT:"Autriche",DK:"Danemark",NO:"Norvège",FI:"Finlande",MX:"Mexique",AR:"Argentine",PL:"Pologne",RU:"Russie",NZ:"Nouvelle-Zélande"};
+const paysFR = p => !p ? "" : (PAYS_CODE[p] || PAYS_EN[p] || p);
+function genreFR(g) {
+  if (!g) return "";
+  const s = norm(g);
+  const M = [[/soundtrack|bande originale|\bscore\b|films?\b|stage|\bost\b|musique de film|screen/, "B.O. / Soundtrack"],
+    [/electro|dance|house|techno/, "Électronique"], [/hip.?hop|\brap\b/, "Hip-hop"], [/funk|soul|r&b|rnb/, "Funk / Soul"],
+    [/metal/, "Métal"], [/rock|alternative|indie|grunge|punk/, "Rock"], [/jazz/, "Jazz"], [/blues/, "Blues"],
+    [/reggae|\bska\b|\bdub\b/, "Reggae"], [/classi/, "Classique"], [/folk|country|world|monde/, "Folk / Country / Monde"],
+    [/pop/, "Pop"], [/latin/, "Latin"], [/chanson|variet|french/, "Chanson française"], [/child|enfant|jeunesse/, "Jeunesse"]];
+  for (const [re, fr] of M) if (re.test(s)) return fr;
+  return g;
+}
+const EDITION_MAP = { "Reissue":"Réédition","Remastered":"Remasterisé","Limited Edition":"Édition limitée","Repress":"Repressage","Gatefold":"Gatefold","Picture Disc":"Picture disc","Club Edition":"Club","Special Edition":"Spéciale","Deluxe Edition":"Deluxe","Numbered":"Numéroté","Promo":"Promo","Test Pressing":"Test pressing","Unofficial Release":"Non officiel","Anniversary Edition":"Anniversaire","Colored":"Coloré" };
+function formatDiscogs(fm) {
+  if (!fm) return { format: "", edition: "" };
+  const d = fm.descriptions || [], has = r => d.some(x => r.test(x)), qty = parseInt(fm.qty, 10) || 1;
+  let f = 'LP 12"';
+  if (/box/i.test(fm.name || "")) f = "Coffret";
+  else if (has(/^7"$/)) f = 'Single 7"';
+  else if (has(/^10"$/)) f = '10"';
+  else if (has(/^EP$/) && !has(/^LP$/)) f = "EP";
+  else if (has(/Maxi|^Single$/) && !has(/^LP$/)) f = 'Maxi 12"';
+  else if (qty > 1) f = 'Double LP 12"';
+  const ed = d.map(x => EDITION_MAP[x]).filter(Boolean);
+  if (fm.text) ed.push(fm.text);
+  return { format: f, edition: ed.join(", ") };
+}
+
+let jpN = 0;
+function jsonp(url, ms) {
+  return new Promise((res, rej) => {
+    const nom = "__vjp" + (++jpN), s = document.createElement("script");
+    const fin = () => { clearTimeout(tm); try { delete window[nom]; } catch (e) { window[nom] = undefined; } s.remove(); };
+    const tm = setTimeout(() => { fin(); rej(new Error("délai dépassé")); }, ms || 9000);
+    window[nom] = d => { fin(); res(d); };
+    s.onerror = () => { fin(); rej(new Error("source injoignable")); };
+    s.src = url + (url.includes("?") ? "&" : "?") + "callback=" + nom;
+    document.head.appendChild(s);
+  });
+}
+async function getJSON(url, ms) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms || 10000);
+  try {
+    const r = await fetch(url, { signal: c.signal });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return await r.json();
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("délai dépassé");
+    if (e instanceof TypeError) throw new Error("bloqué par le navigateur (CORS) ou hors ligne");
+    throw e;
+  } finally { clearTimeout(t); }
+}
+
+async function cherchDiscogs(a, t, o) {
+  if (!reglages.token) throw new Error("jeton requis (⚙ Réglages)");
+  const p = new URLSearchParams({ type: "release", format: "Vinyl", per_page: "15", token: reglages.token });
+  if (o && o.code) p.set("barcode", o.code);
+  else if (o && o.libre) p.set("q", a);
+  else if (a && t) { p.set("artist", a); p.set("release_title", t); } else p.set("q", a || t);
+  const j = await getJSON("https://api.discogs.com/database/search?" + p.toString());
+  return (j.results || []).map(r => {
+    let ar = "", ti = r.title || "";
+    const i = ti.indexOf(" - "); if (i > 0) { ar = ti.slice(0, i); ti = ti.slice(i + 3); }
+    ar = ar.replace(/\s\(\d+\)$/, "");
+    const f = formatDiscogs((r.formats || [])[0]);
+    return { source: "discogs", artiste: ar, titre: ti, annee: r.year ? String(r.year) : "", label: (r.label || [])[0] || "",
+      format: f.format, edition: f.edition, catalogue: r.catno || "", pays: paysFR(r.country),
+      genre: genreFR((r.genre || [])[0]), style: (r.style || [])[0] || "",
+      covers: [r.cover_image, r.thumb].filter(u => u && !/spacer\.gif/.test(u)), lien: r.uri ? "https://www.discogs.com" + r.uri : "" };
+  });
+}
+async function cherchMB(a, t, o) {
+  const e = s => s.replace(/(["\\])/g, "\\$1"), q = [];
+  if (o && o.code) q.push("barcode:" + o.code);
+  else if (o && o.libre) q.push(a.replace(/[^\p{L}\p{N} ]/gu, " "));
+  else { if (a) q.push('artist:"' + e(a) + '"'); if (t) q.push('release:"' + e(t) + '"'); }
+  const j = await getJSON("https://musicbrainz.org/ws/2/release/?fmt=json&limit=25&query=" + encodeURIComponent(q.join(" AND ")));
+  return (j.releases || []).filter(r => (r.media || []).some(m => /vinyl/i.test(m.format || ""))).map(r => {
+    const li = (r["label-info"] || [])[0] || {}, mf = ((r.media || [])[0] || {}).format || "", rg = r["release-group"] || {};
+    let format = /^7/.test(mf) ? 'Single 7"' : /^10/.test(mf) ? '10"' : 'LP 12"';
+    if ((r.media || []).length > 1) format = 'Double LP 12"';
+    return { source: "musicbrainz", artiste: ((r["artist-credit"] || [])[0] || {}).name || "", titre: r.title || "",
+      annee: (r.date || "").slice(0, 4), label: (li.label || {}).name || "", format, edition: "",
+      catalogue: li["catalog-number"] || "", pays: paysFR(r.country), genre: "", style: "",
+      covers: ["https://coverartarchive.org/release/" + r.id + "/front-500", rg.id ? "https://coverartarchive.org/release-group/" + rg.id + "/front-500" : ""].filter(Boolean),
+      lien: "https://musicbrainz.org/release/" + r.id };
+  });
+}
+async function cherchDeezer(a, t, o) {
+  const albumVersCand = (d, x) => { const g = ((x.genres || {}).data || [])[0];
+    return { source: "deezer", artiste: (d.artist || {}).name || "", titre: d.title || "", annee: (x.release_date || "").slice(0, 4),
+      label: x.label || "", format: "", edition: "", catalogue: "", pays: "", genre: genreFR(g && g.name), style: "",
+      covers: [d.cover_xl, d.cover_big, d.cover_medium].filter(Boolean), lien: d.link || "" }; };
+  if (o && o.code) {
+    const x = await jsonp("https://api.deezer.com/album/upc:" + encodeURIComponent(o.code) + "?output=jsonp");
+    return x && x.id && !x.error ? [albumVersCand(x, x)] : [];
+  }
+  const q = o && o.libre ? a : (a && t ? 'artist:"' + a + '" album:"' + t + '"' : (a || t));
+  let j = await jsonp("https://api.deezer.com/search/album?limit=10&output=jsonp&q=" + encodeURIComponent(q));
+  let data = j.data || [];
+  if (!data.length && a && t && !(o && o.libre)) { j = await jsonp("https://api.deezer.com/search/album?limit=10&output=jsonp&q=" + encodeURIComponent(a + " " + t)); data = j.data || []; }
+  data = data.slice(0, 8);
+  const det = await Promise.all(data.slice(0, 3).map(d => jsonp("https://api.deezer.com/album/" + d.id + "?output=jsonp").catch(() => null)));
+  return data.map((d, i) => albumVersCand(d, det[i] || {}));
+}
+async function cherchItunes(a, t, o) {
+  if (o && o.code) return [];
+  const j = await jsonp("https://itunes.apple.com/search?media=music&entity=album&limit=10&country=" + encodeURIComponent(reglages.pays || "fr") + "&term=" + encodeURIComponent((a + " " + t).trim()));
+  return (j.results || []).map(r => ({ source: "itunes", artiste: r.artistName || "", titre: (r.collectionName || "").replace(/\s-\s(Single|EP)$/i, ""),
+    annee: (r.releaseDate || "").slice(0, 4), label: ((r.copyright || "").match(/[℗©]\s*\d{4}\s+(.+)/) || [])[1] || "",
+    format: "", edition: "", catalogue: "", pays: "", genre: genreFR(r.primaryGenreName), style: "",
+    covers: r.artworkUrl100 ? [r.artworkUrl100.replace(/\d+x\d+bb/, "600x600bb")] : [], lien: r.collectionViewUrl || "" }));
+}
+const SOURCES = {
+  discogs: { nom: "Discogs", fn: cherchDiscogs }, musicbrainz: { nom: "MusicBrainz", fn: cherchMB },
+  deezer: { nom: "Deezer", fn: cherchDeezer }, itunes: { nom: "Apple Music", fn: cherchItunes }
+};
+const PRIO = { discogs: 0, musicbrainz: 1, deezer: 2, itunes: 3 };
+
+/* ---- Similarité (tolère les fautes de frappe : « Artic Monkeys », « Avicci »…) ---- */
+const nettoie = s => norm(s).replace(/[\(\[].*?[\)\]]/g, " ").replace(/[^a-z0-9]+/g, " ").replace(/^the /, "").trim();
+function dice2(a, b) {
+  const bg = s => { s = " " + s + " "; const m = new Map(); for (let i = 0; i < s.length - 1; i++) { const g = s.substr(i, 2); m.set(g, (m.get(g) || 0) + 1); } return m; };
+  const A = bg(a), B = bg(b); let inter = 0, ta = 0, tb = 0;
+  A.forEach((n, g) => { ta += n; if (B.has(g)) inter += Math.min(n, B.get(g)); }); B.forEach(n => { tb += n; });
+  return 2 * inter / (ta + tb);
+}
+function sim(a, b) {
+  a = nettoie(a); b = nettoie(b);
+  if (!a || !b) return 0; if (a === b) return 1;
+  if (a.length > 3 && b.length > 3 && (a.includes(b) || b.includes(a))) return Math.max(dice2(a, b), 0.85);
+  return dice2(a, b);
+}
+function score(c, a, t) {
+  let s = a && t ? 0.45 * sim(c.artiste, a) + 0.55 * sim(c.titre, t) : a ? sim(c.artiste, a) : sim(c.titre, t);
+  if (c.source === "discogs" || c.source === "musicbrainz") s += 0.05;
+  return Math.min(1, s);
+}
+function scoreLibre(c, q) {
+  const tq = nettoie(q).split(" ").filter(w => w.length > 1);
+  if (!tq.length) return 0;
+  const tc = " " + nettoie(c.artiste + " " + c.titre) + " ";
+  const cov = tq.filter(w => tc.includes(w)).length / tq.length;
+  return Math.min(1, Math.max(cov * 0.9, sim(c.artiste + " " + c.titre, q)) + ((c.source === "discogs" || c.source === "musicbrainz") ? 0.05 : 0));
+}
+async function chercherTout(a, t, seuil, o) {
+  const actifs = Object.keys(SOURCES).filter(k => reglages.sources[k]), etat = {};
+  const res = await Promise.all(actifs.map(async k => {
+    try { const r = await SOURCES[k].fn(a, t, o); etat[k] = { ok: true, n: r.length }; return r; }
+    catch (e) { etat[k] = { ok: false, msg: e.message || String(e) }; return []; }
+  }));
+  const vus = new Set(); let tous = [].concat(...res).filter(c => {
+    const k = [c.source, nk(c.artiste), nk(c.titre), c.catalogue, c.pays, c.annee].join("|"); if (vus.has(k)) return false; vus.add(k); return true; });
+  tous.forEach(c => { c.score = o && o.code ? (c.source === "deezer" ? 0.95 : 1) : o && o.libre ? scoreLibre(c, a) : score(c, a, t); });
+  tous = tous.filter(c => c.score >= (seuil == null ? 0.3 : seuil));
+  tous.sort((x, y) => (y.score - x.score) || (PRIO[x.source] - PRIO[y.source]));
+  return { candidats: tous.slice(0, 18), etat };
+}
+function deduireCategorie(f) {
+  if (f.genre === "B.O. / Soundtrack") {
+    const ex = vinyles.map(v => v.categorie).find(c => /\bb\.?\s?o\b|ost|film/i.test(c || ""));
+    return ex || "B.O de Films/Séries / OST";
+  }
+  return "Divers";
+}
+function fiche(c, tous) {
+  const f = Object.assign({}, c);
+  const freres = tous.filter(x => x !== c && sim(x.titre, c.titre) > 0.8 && sim(x.artiste, c.artiste) > 0.7).sort((x, y) => PRIO[x.source] - PRIO[y.source]);
+  CHAMPS_FICHE.forEach(k => { if (!f[k]) for (const x of freres) if (x[k]) { f[k] = x[k]; break; } });
+  const covers = [];
+  c.covers.concat(...freres.map(x => x.covers)).forEach(u => { if (u && !covers.includes(u)) covers.push(u); });
+  f.covers = covers;
+  f.categorie = deduireCategorie(f);
+  return f;
+}
+const imageOk = (url, ms) => new Promise(res => {
+  const i = new Image(), t = setTimeout(() => res(false), ms || 7000);
+  i.onload = () => { clearTimeout(t); res(i.naturalWidth > 50); };
+  i.onerror = () => { clearTimeout(t); res(false); };
+  i.src = url;
+});
+async function premiereOk(urls) { for (const u of urls) if (await imageOk(u)) return u; return ""; }
+
+/* ---- Liens vers des sites sans accès automatique possible (Amazon, Fnac…) ---- */
+function liensExternes(a, t) {
+  const q = encodeURIComponent((a + " " + t).trim()), qv = encodeURIComponent((a + " " + t + " vinyle").trim());
+  const site = (d) => "https://duckduckgo.com/?q=" + encodeURIComponent("site:" + d + " " + (a + " " + t).trim());
+  return [["Discogs", "https://www.discogs.com/search/?type=release&format_exact=Vinyl&q=" + q],
+    ["Amazon.fr", "https://www.amazon.fr/s?k=" + qv], ["Fnac", "https://www.fnac.com/SearchResult/ResultList.aspx?Search=" + qv],
+    ["Cultura", "https://www.cultura.com/search/results?search_query=" + qv], ["Bandcamp", "https://bandcamp.com/search?q=" + q],
+    ["Vinylmaniaque", site("vinylmaniaque.com")], ["Mondo Shop", site("mondoshop.com")], ["Edition Collector", site("editioncollector.fr")],
+    ["Rate Your Music", "https://rateyourmusic.com/search?searchterm=" + q + "&searchtype=l"], ["MusicBrainz", "https://musicbrainz.org/search?type=release&query=" + q]];
+}
+
+/* =====================================================================
+   Formulaire d'ajout / modification
+   ===================================================================== */
+const form = $("formulaire");
+const ouvrirAjout = () => { $("bloc-ajout").open = true; };
+let coverRef = "", coversAlt = [], coversMortes = new Set(), reqId = 0, candCourants = [], tRech = null, photoRef = "";
+
+function lireForm() {
+  const o = {}; ["statut","artiste","titre","annee","label","format","edition","catalogue","pays","genre","style","categorie","emplacement"]
+    .forEach(k => { o[k] = form.elements[k].value.trim(); });
+  o.pochette = coverRef; return o;
+}
+function ecrireForm(o) { Object.keys(o).forEach(k => { if (form.elements[k] && o[k] != null) form.elements[k].value = o[k]; }); }
+function renderCover() {
+  const p = $("couv-prev"); p.textContent = "";
+  if (coverRef) {
+    const i = imgRef(coverRef, "", "Pochette"); p.appendChild(i);
+    i.addEventListener("error", () => {
+      if (coversAlt.length > 1) { coversMortes.add(coverRef); const n = coversAlt.find(u => !coversMortes.has(u)); coverRef = n || ""; renderCover(); }
+    }, { once: true });
+    hydrater(p);
+  } else p.textContent = "💿";
+  const alts = $("couv-alts"); alts.textContent = "";
+  coversAlt.filter(u => !coversMortes.has(u)).forEach(u => {
+    const i = imgRef(u, u === coverRef ? "choisie" : "", "Autre pochette"); i.title = "Utiliser cette pochette";
+    i.onclick = () => { coverRef = u; renderCover(); }; alts.appendChild(i);
+  });
+  hydrater(alts);
+}
+function reinitForm() {
+  form.reset(); coverRef = ""; coversAlt = []; coversMortes = new Set(); editId = null; candCourants = []; photoRef = ""; $("res-ocr").textContent = "";
+  $("titre-form").textContent = "Ajouter un vinyle"; $("btn-valider").textContent = "Ajouter à la collection";
+  $("btn-annuler-edit").hidden = true; $("resultats").hidden = true; renderCover();
+}
+function majCategories() {
+  const dl = $("liste-categories"); dl.textContent = "";
+  [...new Set(vinyles.map(v => v.categorie).filter(Boolean))].sort().forEach(c => { const o = document.createElement("option"); o.value = c; dl.appendChild(o); });
+}
+function planifierRecherche() {
+  clearTimeout(tRech); tRech = setTimeout(() => lancerRecherche(), 900);
+}
+async function lancerRecherche() {
+  ouvrirAjout();
+  const a = form.elements.artiste.value.trim(), t = form.elements.titre.value.trim();
+  if (a.length < 2 && t.length < 2) { $("resultats").hidden = true; return; }
+  const id = ++reqId, p = $("resultats");
+  p.hidden = false; $("res-liste").textContent = ""; $("res-etat").textContent = "⏳ Recherche en cours sur Discogs, MusicBrainz, Deezer et Apple Music…"; $("res-liens").textContent = "";
+  const { candidats, etat } = await chercherTout(a, t);
+  if (id !== reqId) return;
+  afficherResultats(candidats, etat, a, t);
+}
+function afficherResultats(candidats, etat, a, t) {
+  candCourants = candidats; $("resultats").hidden = false;
+  $("res-etat").innerHTML = Object.entries(etat).map(([k, s]) => "<b>" + SOURCES[k].nom + "</b> " + (s.ok ? "✓ " + s.n : "✗ " + esc(s.msg))).join(" · ")
+    + (reglages.token ? "" : " — <i>astuce : ajoutez un jeton Discogs dans ⚙ Réglages pour obtenir n° de catalogue, pays et pressage exacts.</i>");
+  const L = $("res-liste"); L.textContent = "";
+  if (!candidats.length) { L.innerHTML = '<div class="vide" style="grid-column:1/-1">Aucune suggestion. Vérifiez l\'orthographe, ou consultez les sites ci-dessous.</div>'; }
+  candidats.forEach(c => {
+    const d = document.createElement("div"); d.className = "res";
+    const mini = document.createElement("div"); mini.className = "mini"; mini.textContent = "💿";
+    if (c.covers[0]) { const im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; let n = 0; im.src = c.covers[0];
+      im.onerror = () => { n++; if (c.covers[n]) im.src = c.covers[n]; else im.remove(); }; mini.textContent = ""; mini.appendChild(im); }
+    const txt = document.createElement("div"); txt.className = "txt";
+    const det = [c.annee, c.label, c.format, c.catalogue && "N° " + c.catalogue, c.pays, c.genre].filter(Boolean).join(" · ");
+    txt.innerHTML = "<b>" + esc(c.artiste) + " — " + esc(c.titre) + "</b><span class='badge'>" + esc(SOURCES[c.source].nom) + "</span><span class='badge gris'>" + Math.round(c.score * 100) + " %</span>" + (c.vis != null ? "<span class='badge gris' title='Ressemblance visuelle avec votre photo'>🖼 " + Math.round(c.visCal * 100) + " %</span>" : "") + "<br>" + esc(det || "informations limitées");
+    const bt = document.createElement("button"); bt.type = "button"; bt.className = "petit primaire"; bt.textContent = "Utiliser"; bt.style.alignSelf = "center";
+    bt.onclick = () => utiliserCandidat(c); d.append(mini, txt, bt); L.appendChild(d);
+  });
+  const lk = $("res-liens"); lk.textContent = "Chercher aussi sur : ";
+  liensExternes(a, t).forEach(([n, u]) => { const x = document.createElement("a"); x.href = u; x.target = "_blank"; x.rel = "noopener"; x.textContent = n; lk.appendChild(x); });
+}
+function utiliserCandidat(c) {
+  ouvrirAjout();
+  const f = fiche(c, candCourants);
+  ecrireForm({ artiste: f.artiste, titre: f.titre });
+  CHAMPS_FICHE.forEach(k => { if (f[k]) form.elements[k].value = f[k]; });
+  if (!form.elements.categorie.value) form.elements.categorie.value = f.categorie;
+  coversAlt = f.covers.slice(); if (photoRef) coversAlt.push(photoRef); coversMortes = new Set(); coverRef = coversAlt[0] || coverRef; renderCover();
+  $("btn-valider").focus(); toast("Champs remplis : vérifiez, puis cliquez sur « " + $("btn-valider").textContent + " ».");
+}
+form.elements.artiste.addEventListener("input", planifierRecherche);
+form.elements.titre.addEventListener("input", planifierRecherche);
+$("btn-chercher").onclick = () => lancerRecherche();
+$("btn-couv-fichier").onclick = () => $("input-couv").click();
+$("btn-couv-retirer").onclick = () => { coverRef = ""; coversAlt = []; renderCover(); };
+$("input-couv").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { const b = await reduireImage(f), ref = "local:" + uid(); await kvSet("covers", ref, b);
+    coverRef = ref; coversAlt = coversAlt.filter(u => u !== ref); renderCover(); toast("Image ajoutée (gardée sur ce navigateur)."); }
+  catch (err) { toast("Image impossible : " + err.message); }
+});
+$("btn-reset").addEventListener("click", () => { setTimeout(reinitForm, 0); });
+$("btn-annuler-edit").onclick = reinitForm;
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  const o = lireForm();
+  if (!o.artiste || !o.titre) { toast("Artiste et titre sont obligatoires."); return; }
+  if (editId) {
+    const v = vinyles.find(x => x.id === editId); if (v) Object.assign(v, o);
+  } else {
+    if (vinyles.some(x => cle(x) === cle(o)) && !confirm("« " + o.titre + " » de " + o.artiste + " semble déjà présent. L'ajouter quand même ?")) return;
+    vinyles.unshift(mkVinyle(o));
+  }
+  if (o.pochette) mettreEnCache(o.pochette);
+  const msg = editId ? "Modification enregistrée." : "✔ « " + o.titre + " » ajouté.";
+  reinitForm(); changed(); rendre(); toast(msg);
+});
+function modifier(id) {
+  const v = vinyles.find(x => x.id === id); if (!v) return;
+  form.reset(); ecrireForm(v); editId = id; coverRef = v.pochette; coversAlt = v.pochette ? [v.pochette] : []; coversMortes = new Set(); renderCover();
+  $("titre-form").textContent = "Modifier : " + v.titre; $("btn-valider").textContent = "Enregistrer les modifications"; $("btn-annuler-edit").hidden = false;
+  $("resultats").hidden = true; ouvrirAjout(); window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* =====================================================================
+   Affichage de la collection : filtres, tri, regroupements, vues
+   ===================================================================== */
+function filtrer() {
+  const q = norm($("recherche").value).trim();
+  return vinyles.filter(v => (onglet === "tous" || v.statut === onglet) && (!q || CHAMPS_RECH.some(k => norm(v[k]).includes(q))));
+}
+function trier(l, m) {
+  const cmp = (a, b) => String(a || "").localeCompare(String(b || ""), "fr", { sensitivity: "base", numeric: true });
+  const vide = (a, b, f) => { const ea = !a, eb = !b; return ea !== eb ? (ea ? 1 : -1) : f(a, b); };
+  l.sort((x, y) => {
+    switch (m) {
+      case "titre": return cmp(x.titre, y.titre);
+      case "annee": return vide(x.annee, y.annee, (a, b) => a - b) || cmp(x.artiste, y.artiste);
+      case "annee-desc": return vide(x.annee, y.annee, (a, b) => b - a) || cmp(x.artiste, y.artiste);
+      case "genre": return cmp(x.genre, y.genre) || cmp(x.artiste, y.artiste);
+      case "label": return cmp(x.label, y.label) || cmp(x.artiste, y.artiste);
+      case "ajoute-desc": return cmp(y.ajoute, x.ajoute);
+      default: return cmp(x.artiste, y.artiste) || cmp(x.titre, y.titre);
+    }
+  });
+}
+function groupes(l, m) {
+  if (m === "aucun") return [["", l]];
+  const F = { categorie: v => v.categorie || "(Sans catégorie)", genre: v => v.genre || "(Sans genre)", style: v => v.style || "(Sans style)",
+    annee: v => v.annee || "(Année inconnue)", decennie: v => /^\d{4}$/.test(v.annee) ? (Math.floor(v.annee / 10) * 10) + "s" : "(Année inconnue)",
+    label: v => v.label || "(Sans label)", format: v => v.format || "(Sans format)", pays: v => v.pays || "(Sans pays)",
+    emplacement: v => v.emplacement || "(Sans emplacement)", artiste: v => (norm(v.artiste).trim()[0] || "#").toUpperCase(),
+    statut: v => v.statut === "souhaite" ? "Souhaités" : "Possédés" }[m];
+  const map = new Map(); l.forEach(v => { const k = F(v); if (!map.has(k)) map.set(k, []); map.get(k).push(v); });
+  return [...map.entries()].sort((a, b) => { const ea = a[0].startsWith("("), eb = b[0].startsWith("("); if (ea !== eb) return ea ? 1 : -1; return a[0].localeCompare(b[0], "fr", { numeric: true }); });
+}
+function ligneInfo(ul, lib, val) { if (!val) return; const li = document.createElement("li"), b = document.createElement("b"); b.textContent = lib + " : "; li.append(b, document.createTextNode(val)); ul.appendChild(li); }
+function boutons(v) {
+  const d = document.createElement("div"); d.className = "btns";
+  const mk = (txt, fn, cls) => { const b = document.createElement("button"); b.type = "button"; b.className = "petit " + (cls || ""); b.textContent = txt; b.onclick = fn; d.appendChild(b); };
+  if (v.statut === "souhaite") mk("✔ Je l'ai", () => { v.statut = "possede"; changed(); rendre(); });
+  mk("Modifier", () => modifier(v.id)); mk("Supprimer", () => supprimer(v.id), "danger"); return d;
+}
+function carte(v) {
+  const c = document.createElement("article"); c.className = "carte";
+  c.appendChild(v.pochette ? imgRef(v.pochette, "pochette", "Pochette de " + v.titre + " — " + v.artiste, "pochette sans-pochette") : placeholder("pochette sans-pochette"));
+  const co = document.createElement("div"); co.className = "corps";
+  const t = document.createElement("h3"); t.className = "titre"; t.textContent = v.titre;
+  const a = document.createElement("p"); a.className = "artiste"; a.textContent = v.artiste;
+  const ul = document.createElement("ul"); ul.className = "infos";
+  if (v.statut === "souhaite") ligneInfo(ul, "Statut", "Souhaité");
+  ligneInfo(ul, "Année", v.annee); ligneInfo(ul, "Label", v.label); ligneInfo(ul, "Format", v.format); ligneInfo(ul, "Genre", v.genre + (v.style ? " / " + v.style : ""));
+  ligneInfo(ul, "Catégorie", v.categorie); ligneInfo(ul, "Édition", v.edition); ligneInfo(ul, "N° catalogue", v.catalogue); ligneInfo(ul, "Pays", v.pays); ligneInfo(ul, "Emplacement", v.emplacement);
+  co.append(t, a, ul, boutons(v)); c.appendChild(co); return c;
+}
+function rendre() {
+  majCategories();
+  const liste = filtrer(); trier(liste, $("tri").value);
+  const zone = $("liste"), vue = $("vue").value; zone.textContent = "";
+  $("lab-taille").hidden = vue !== "mur";
+  const nP = vinyles.filter(v => v.statut === "possede").length, nS = vinyles.length - nP;
+  $("onglets").querySelectorAll("button").forEach(b => { b.classList.toggle("actif", b.dataset.onglet === onglet);
+    b.textContent = { tous: "Tous (" + vinyles.length + ")", possede: "Possédés (" + nP + ")", souhaite: "Souhaités (" + nS + ")" }[b.dataset.onglet]; });
+  $("compteur").textContent = norm($("recherche").value).trim() ? liste.length + " résultat(s) sur " + vinyles.length : liste.length + " vinyle(s) affiché(s)";
+  if (!liste.length) { zone.innerHTML = '<div class="vide">' + (vinyles.length ? "Aucun vinyle ne correspond." : "Votre collection est vide : ajoutez un vinyle ci-dessus ou importez votre ancien Excel.") + "</div>"; return; }
+  groupes(liste, $("groupe").value).forEach(([nom, items]) => {
+    const g = document.createElement("div"); g.className = "groupe";
+    if (nom) { const h = document.createElement("h3"); h.textContent = nom + " "; const s = document.createElement("span"); s.textContent = "(" + items.length + ")"; h.appendChild(s); g.appendChild(h); }
+    if (vue === "cartes") { const w = document.createElement("div"); w.className = "cartes"; items.forEach(v => w.appendChild(carte(v))); g.appendChild(w); }
+    else if (vue === "mur") {
+      const w = document.createElement("div"); w.className = "mur";
+      items.forEach(v => { const el = v.pochette ? imgRef(v.pochette, "", v.artiste + " — " + v.titre, "sans-pochette") : placeholder("sans-pochette"); el.title = v.artiste + " — " + v.titre + (v.annee ? " (" + v.annee + ")" : ""); el.onclick = () => modifier(v.id); w.appendChild(el); });
+      g.appendChild(w);
+    } else {
+      const tb = document.createElement("table"); tb.className = "tableau";
+      tb.innerHTML = "<thead><tr><th></th><th>Artiste</th><th>Titre</th><th>Année</th><th>Label</th><th>Format</th><th>Genre</th><th>Catégorie</th><th>Pays</th><th>N° cat.</th><th>Emplacement</th><th></th></tr></thead>";
+      const bd = document.createElement("tbody");
+      items.forEach(v => { const tr = document.createElement("tr");
+        const td0 = document.createElement("td"); td0.appendChild(v.pochette ? imgRef(v.pochette, "", "", "sans-pochette") : placeholder("sans-pochette")); tr.appendChild(td0);
+        [v.artiste, v.titre, v.annee, v.label, v.format, v.genre, v.categorie, v.pays, v.catalogue, v.emplacement].forEach(x => { const td = document.createElement("td"); td.textContent = x; tr.appendChild(td); });
+        const ta = document.createElement("td"); ta.appendChild(boutons(v)); tr.appendChild(ta); bd.appendChild(tr); });
+      tb.appendChild(bd); g.appendChild(tb);
+    }
+    zone.appendChild(g);
+  });
+  hydrater(zone);
+}
+function supprimer(id) {
+  const v = vinyles.find(x => x.id === id); if (!v) return;
+  if (!confirm("Supprimer « " + v.titre + " » de " + v.artiste + " ?\nCette action est définitive.")) return;
+  vinyles = vinyles.filter(x => x.id !== id); if (editId === id) reinitForm(); changed(); rendre();
+}
+
+/* =====================================================================
+   Complétion automatique de toute la collection (avec validation)
+   ===================================================================== */
+const manque = v => !v.annee || !v.label || !v.genre || !v.pochette || !v.format;
+const LIB = Object.fromEntries(COLS);
+async function completerCollection() {
+  const cibles = vinyles.filter(manque);
+  if (!cibles.length) { toast("Tous vos vinyles sont déjà complets."); return; }
+  let annule = false;
+  const corps = document.createElement("div");
+  corps.innerHTML = '<p id="pg-txt">Préparation…</p><progress id="pg" max="' + cibles.length + '" value="0"></progress><p style="color:var(--discret);font-size:.85rem;margin-top:10px">Recherche sur Discogs, MusicBrainz, Deezer et Apple Music (environ 1 vinyle par seconde). Rien n\'est modifié avant votre validation.</p>';
+  dialogue({ titre: "Recherche des informations…", html: corps, boutons: [["Arrêter", "stop"]] }).then(() => { annule = true; });
+  const props = [];
+  for (let i = 0; i < cibles.length && !annule; i++) {
+    const v = cibles[i];
+    corps.querySelector("#pg-txt").textContent = (i + 1) + " / " + cibles.length + " — " + v.artiste + " · " + v.titre;
+    corps.querySelector("#pg").value = i;
+    const { candidats } = await chercherTout(v.artiste, v.titre, 0.45);
+    const best = candidats[0];
+    if (best) {
+      const f = fiche(best, candidats), ch = [];
+      CHAMPS_FICHE.forEach(k => { if (!v[k] && f[k]) ch.push({ k, neu: f[k] }); });
+      if (!v.categorie) ch.push({ k: "categorie", neu: f.categorie });
+      ["artiste", "titre"].forEach(k => { if (f[k] && f[k] !== v[k] && sim(f[k], v[k]) >= 0.55) ch.push({ k, neu: f[k], correction: true }); });
+      let cov = ""; if (!v.pochette && f.covers.length) cov = await premiereOk(f.covers);
+      if (cov) ch.push({ k: "pochette", neu: cov });
+      props.push({ v, ch, score: best.score, source: best.source, cov });
+    } else props.push({ v, ch: [], score: 0, aucun: true });
+    await pause(1100);
+  }
+  await fermerDialogue();
+  const utiles = props.filter(p => p.ch.length);
+  if (!utiles.length) { toast(annule ? "Recherche arrêtée." : "Aucune information supplémentaire trouvée. Vérifiez ⚙ Réglages (jeton Discogs) et la connexion."); return; }
+  const tb = document.createElement("div");
+  tb.innerHTML = "<p>Cochez ce que vous voulez appliquer. Les lignes avec un score faible sont décochées par défaut.</p><table class='revue'><thead><tr><th></th><th></th><th>Vinyle</th><th>Modifications proposées</th><th>Fiabilité</th></tr></thead><tbody>" +
+    utiles.map((p, i) => "<tr><td><input type='checkbox' data-i='" + i + "'" + (p.score >= 0.6 ? " checked" : "") + "></td><td id='rv" + i + "'></td><td><b>" + esc(p.v.artiste) + "</b><br>" + esc(p.v.titre) + "</td><td>" +
+      p.ch.filter(c => c.k !== "pochette").map(c => "<span class='chg'>" + (c.correction ? "✏️ " : "") + esc(LIB[c.k]) + " : " + (c.correction ? "<span class='avant'>" + esc(p.v[c.k]) + "</span> → " : "") + "<b>" + esc(c.neu) + "</b></span>").join("") + "</td><td>" + Math.round(p.score * 100) + " %<br><span class='badge gris'>" + esc(SOURCES[p.source].nom) + "</span></td></tr>").join("") + "</tbody></table>";
+  utiles.forEach((p, i) => { const cell = tb.querySelector("#rv" + i); cell.appendChild(p.cov ? imgRef(p.cov, "", "", "sans-pochette") : placeholder("sans-pochette")); });
+  hydrater(tb);
+  const rep = await dialogue({ titre: utiles.length + " vinyle(s) à compléter", html: tb, large: true,
+    boutons: [["Appliquer la sélection", "ok", "primaire"],
+      ["Tout cocher", null, "", () => tb.querySelectorAll("input[type=checkbox]").forEach(c => { c.checked = true; })],
+      ["Tout décocher", null, "", () => tb.querySelectorAll("input[type=checkbox]").forEach(c => { c.checked = false; })],
+      ["Fermer", null]] });
+  if (rep !== "ok") return;
+  let n = 0;
+  tb.querySelectorAll("input[type=checkbox]").forEach(c => {
+    if (!c.checked) return; const p = utiles[+c.dataset.i]; p.ch.forEach(x => { p.v[x.k] = x.neu; }); if (p.cov) mettreEnCache(p.cov); n++;
+  });
+  if (n) { changed(); rendre(); toast("✔ " + n + " vinyle(s) complété(s)."); }
+}
+
+/* =====================================================================
+   Réglages et diagnostic des sources
+   ===================================================================== */
+/* =====================================================================
+   Dossier transportable : index.html + Excel + pochettes/ dans un même dossier
+   ===================================================================== */
+const NOM_XLSX = "Ma-collection-vinyles.xlsx";
+const URL_SHEETJS = "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+function attendreXLSX() {
+  return new Promise(r => {
+    if (typeof XLSX !== "undefined") return r();
+    let n = 0; const t = setInterval(() => { if (typeof XLSX !== "undefined" || ++n > 60) { clearInterval(t); r(); } }, 100);
+  });
+}
+async function lireDansDossier(chemin) {
+  const p = chemin.split("/"); let d = fichier.dir;
+  for (let i = 0; i < p.length - 1; i++) d = await d.getDirectoryHandle(p[i]);
+  return await (await d.getFileHandle(p[p.length - 1])).getFile();
+}
+async function ecrireCover(blob, v) {
+  const d = await fichier.dir.getDirectoryHandle("pochettes", { create: true });
+  const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" }[blob.type] || "jpg";
+  const nom = (nk(v.artiste + v.titre).slice(0, 40) || "pochette") + "-" + uid().slice(-5) + "." + ext;
+  const fh = await d.getFileHandle(nom, { create: true }); const w = await fh.createWritable(); await w.write(blob); await w.close();
+  return "pochettes/" + nom;
+}
+/* Copie dans le dossier les pochettes choisies sur le PC ou trouvées sur Internet,
+   pour que le dossier contienne tout et reste utilisable sans connexion. */
+let rapatrie = false; const essayes = new Set();
+async function rapatrierPochettes() {
+  if (fichier.drive) return rapatrierDrive();
+  if (!fichier.dir || fichier.reco || rapatrie) return 0;
+  rapatrie = true; let n = 0;
+  try {
+    for (const v of vinyles) {
+      const p = v.pochette; if (!p) continue;
+      try {
+        if (p.startsWith("local:")) { const b = await kvGet("covers", p); if (b instanceof Blob) { v.pochette = await ecrireCover(b, v); n++; } }
+        else if (/^https?:/i.test(p) && !essayes.has(p)) {
+          essayes.add(p); const r = await fetch(p, { mode: "cors" });
+          if (r.ok) { const b = await r.blob(); if (/^image\//.test(b.type) && b.size > 1000) { v.pochette = await ecrireCover(b, v); n++; } }
+        }
+      } catch (e) { /* on réessaiera la prochaine session ou on garde l'adresse Internet */ }
+    }
+  } finally { rapatrie = false; }
+  if (n) { changed(); rendre(); }
+  return n;
+}
+async function installerBibliotheque(silencieux) {
+  if (!fichier.dir || fichier.reco) { if (!silencieux) toast("Ouvrez d'abord votre dossier (📁 Mon dossier)."); return false; }
+  try {
+    if (silencieux) { try { await fichier.dir.getFileHandle("xlsx.full.min.js"); return true; } catch (e) { /* absent : on l'installe */ } }
+    const r = await fetch(URL_SHEETJS); if (!r.ok) throw new Error("HTTP " + r.status);
+    const t = await r.text(); if (t.length < 100000) throw new Error("fichier incomplet");
+    const fh = await fichier.dir.getFileHandle("xlsx.full.min.js", { create: true }); const w = await fh.createWritable(); await w.write(t); await w.close();
+    if (!silencieux) toast("✔ Bibliothèque Excel installée dans le dossier : la page marche désormais sans Internet.", 6000);
+    return true;
+  } catch (e) {
+    if (!silencieux) toast("Téléchargement impossible (" + e.message + "). Ouvrez " + URL_SHEETJS + " dans le navigateur, faites Ctrl+S et enregistrez le fichier dans votre dossier.", 10000);
+    return false;
+  }
+}
+async function ecrireLisezMoi(dir) {
+  try { await dir.getFileHandle("LISEZ-MOI.txt"); return; } catch (e) { /* à créer */ }
+  const L = ["MA COLLECTION DE VINYLES - dossier transportable", "",
+    "Contenu du dossier :",
+    "  index.html               la page à ouvrir (Chrome ou Edge, sur ordinateur)",
+    "  Ma-collection-vinyles.xlsx   toutes vos données (ouvrable et modifiable dans Excel)",
+    "  pochettes\\               les images des pochettes",
+    "  xlsx.full.min.js         bibliothèque Excel : permet de travailler sans Internet",
+    "", "Utiliser ce dossier sur un autre PC :",
+    "  1. Copiez TOUT le dossier (clé USB, disque externe, OneDrive, Dropbox...).",
+    "  2. Ouvrez index.html depuis ce dossier avec Chrome ou Edge.",
+    "  3. Cliquez sur \"Mon dossier\" et choisissez ce même dossier (une seule fois par PC).",
+    "     Chrome refuse de choisir directement \"Documents\" ou \"Bureau\" : choisissez le dossier de la collection lui-même.",
+    "", "Sauvegarde : copiez simplement le dossier entier de temps en temps.",
+    "Ne renommez pas Ma-collection-vinyles.xlsx ni le dossier pochettes."];
+  const fh = await dir.getFileHandle("LISEZ-MOI.txt", { create: true }); const w = await fh.createWritable();
+  await w.write(L.join("\r\n")); await w.close();
+}
+async function ouvrirDossier() {
+  if (!hasFS || !window.showDirectoryPicker) { toast("Le mode dossier demande Chrome ou Edge sur ordinateur.", 6000); return; }
+  try { const dir = await showDirectoryPicker({ id: "vinylection", mode: "readwrite" }); await lierDossier(dir); }
+  catch (e) { if (e.name !== "AbortError") toast("Erreur : " + e.message, 7000); }
+}
+async function lierDossier(dir) {
+  await attendreXLSX();
+  if (!await permission(dir, true)) { toast("Autorisation refusée."); return; }
+  let fh = null, existait = true, fusion = false;
+  try { fh = await dir.getFileHandle(NOM_XLSX); } catch (e) { existait = false; }
+  const autres = [];
+  if (!existait) { try { for await (const [nom, h] of dir.entries()) if (h.kind === "file" && /\.xlsx$/i.test(nom)) autres.push(nom); } catch (e) {} }
+  if (existait) {
+    let res; try { res = analyser(await (await fh.getFile()).arrayBuffer()); } catch (e) { toast(e.message, 7000); return; }
+    if (res.type !== "plat") { toast("Ce fichier n'a pas le format de l'application : utilisez « Importer un ancien Excel »."); return; }
+    const garde = res.vinyles;
+    if (vinyles.length && !fichier.dir && !fichier.handle) {
+      const c = await dialogue({ titre: "Copie du navigateur", html: "<p>Ce navigateur contient déjà " + vinyles.length + " vinyle(s) non liés à un dossier. Que faire ?</p>",
+        boutons: [["Charger le dossier (ignorer la copie)", "dossier", "primaire"], ["Fusionner les deux", "fusion"], ["Annuler", null]] });
+      if (!c) return;
+      if (c === "fusion") { vinyles.forEach(v => { if (!garde.some(x => cle(x) === cle(v) && x.statut === v.statut)) garde.push(v); }); fusion = true; }
+    }
+    vinyles = garde;
+  } else fh = await dir.getFileHandle(NOM_XLSX, { create: true });
+  [...urlsObjets.keys()].filter(k => k.startsWith("pochettes/")).forEach(k => urlsObjets.delete(k));
+  fichier = { handle: fh, dir, nom: NOM_XLSX, dirty: !existait || fusion, reco: false, derniere: null };
+  await kvSet("kv", "dir", dir); await kvSet("kv", "handle", fh); await kvSet("kv", "drive", null);
+  if (fichier.dirty) await sauvegarder(true); else await sauverCache();
+  ecrireLisezMoi(dir).catch(() => {}); installerBibliotheque(true);
+  majUI(); rendre();
+  toast(existait ? "Dossier ouvert : " + vinyles.length + " vinyle(s)." : "Dossier lié : « " + NOM_XLSX + " » créé.");
+  if (!existait && autres.length) {
+    const c = await dialogue({ titre: "Fichier Excel trouvé dans ce dossier", html: "<p>« " + esc(autres[0]) + " » est présent dans le dossier. L'importer dans votre collection ?</p>",
+      boutons: [["Importer", "oui", "primaire"], ["Non, collection vide", null]] });
+    if (c) { try { const f = await (await dir.getFileHandle(autres[0])).getFile(); const res = analyser(await f.arrayBuffer()); await proposerImport(res.vinyles, autres[0]); } catch (e) { toast(e.message, 7000); } }
+  }
+  rapatrierPochettes();
+}
+
+/* =====================================================================
+   Import par photo : code-barres, puis lecture du texte (OCR)
+   ===================================================================== */
+const scriptsCharges = {};
+function chargerScript(url) {
+  return scriptsCharges[url] || (scriptsCharges[url] = new Promise((res, rej) => {
+    const s = document.createElement("script"); s.src = url; s.onload = () => res();
+    s.onerror = () => { delete scriptsCharges[url]; rej(new Error("chargement impossible (Internet requis)")); };
+    document.head.appendChild(s);
+  }));
+}
+async function versCanvas(src, max) {
+  const bmp = await createImageBitmap(src);
+  const r = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.round(bmp.width * r); c.height = Math.round(bmp.height * r);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); return c;
+}
+const canvasBlob = (c, q) => new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error("conversion impossible")), "image/jpeg", q || 0.85));
+async function lireCodeBarres(canvas) {
+  const bon = /^\d{8,14}$/;
+  try {
+    if ("BarcodeDetector" in window) {
+      const r = await new BarcodeDetector({ formats: ["ean_13", "upc_a", "ean_8", "upc_e"] }).detect(canvas);
+      const x = r.find(y => bon.test(y.rawValue)); if (x) return x.rawValue;
+    }
+  } catch (e) { /* on essaie la bibliothèque */ }
+  try {
+    await chargerScript("https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js");
+    const url = URL.createObjectURL(await canvasBlob(canvas, 0.95));
+    try { const r = await new ZXing.BrowserMultiFormatReader().decodeFromImageUrl(url); const t = r.getText(); if (bon.test(t)) return t; }
+    finally { URL.revokeObjectURL(url); }
+  } catch (e) { /* pas de code lisible */ }
+  return "";
+}
+async function lireTexte(canvas, etat) {
+  await chargerScript("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js");
+  const r = await Tesseract.recognize(canvas, "eng+fra", { logger: m => { if (m && m.status && etat) etat("Lecture du texte : " + m.status + (m.progress ? " " + Math.round(m.progress * 100) + " %" : "")); } });
+  const lignes = [];
+  ((r.data && r.data.text) || "").split(/\n+/).forEach(l => {
+    l = l.replace(/[^\p{L}\p{N}'&:.,!?\- ]/gu, " ").replace(/\s+/g, " ").trim();
+    if (l.length >= 3 && /\p{L}{2,}/u.test(l) && !lignes.some(x => norm(x) === norm(l))) lignes.push(l);
+  });
+  return lignes.slice(0, 8);
+}
+/* ---- Reconnaissance visuelle : la photo est comparée aux pochettes officielles des suggestions ---- */
+function empreinteVisuelle(src) {
+  const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height, m = Math.min(w, h);
+  const c = document.createElement("canvas"); c.width = c.height = 32;
+  const x = c.getContext("2d", { willReadFrequently: true });
+  x.drawImage(src, (w - m) / 2, (h - m) / 2, m, m, 0, 0, 32, 32);   /* carré central */
+  const d = x.getImageData(0, 0, 32, 32).data;                       /* peut échouer si l'image n'est pas lisible (CORS) */
+  const gris = new Float32Array(256), hist = new Float32Array(64), lay = new Float32Array(48);
+  let mu = 0;
+  for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) {
+    let g = 0;
+    for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 2; dx++) {
+      const p = ((j * 2 + dy) * 32 + i * 2 + dx) * 4, r = d[p], gg = d[p + 1], b = d[p + 2];
+      g += 0.299 * r + 0.587 * gg + 0.114 * b;
+      hist[(r >> 6) * 16 + (gg >> 6) * 4 + (b >> 6)]++;
+      const q = ((j >> 2) * 4 + (i >> 2)) * 3; lay[q] += r / 16; lay[q + 1] += gg / 16; lay[q + 2] += b / 16;
+    }
+    gris[j * 16 + i] = g / 4; mu += g / 4;
+  }
+  mu /= 256; let v = 0; for (let i = 0; i < 256; i++) { gris[i] -= mu; v += gris[i] * gris[i]; }
+  const sd = Math.sqrt(v / 256) || 1; for (let i = 0; i < 256; i++) gris[i] /= sd;
+  for (let i = 0; i < 64; i++) hist[i] /= 1024;
+  return { gris, hist, lay };
+}
+function ressemblance(a, b) {
+  let dot = 0; for (let i = 0; i < 256; i++) dot += a.gris[i] * b.gris[i];
+  const corr = Math.max(0, dot / 256);
+  let inter = 0; for (let i = 0; i < 64; i++) inter += Math.min(a.hist[i], b.hist[i]);
+  let dl = 0; for (let i = 0; i < 48; i++) dl += Math.abs(a.lay[i] - b.lay[i]); dl /= 48;
+  const layout = Math.max(0, 1 - 2.5 * dl / 255);
+  return 0.4 * corr + 0.25 * inter + 0.35 * layout;
+}
+function chargerImageLisible(url, ms) {
+  return new Promise(res => {
+    const i = new Image(), t = setTimeout(() => res(null), ms || 7000); i.crossOrigin = "anonymous";
+    i.onload = () => { clearTimeout(t); res(i.naturalWidth > 20 ? i : null); };
+    i.onerror = () => { clearTimeout(t); res(null); };
+    i.src = url;
+  });
+}
+/* ---- Option : modèle CLIP (partie image seule, version quantifiée ≈ 89 Mo), exécuté dans le navigateur ---- */
+const CLIP_LIB = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1", CLIP_MODELE = "Xenova/clip-vit-base-patch32";
+let clipP = null, clipProgres = null, clipErreur = "";
+function chargerClip() {
+  if (!clipP) clipP = (async () => {
+    const T = await import(CLIP_LIB);
+    const processor = await T.AutoProcessor.from_pretrained(CLIP_MODELE);
+    const vision = await T.CLIPVisionModelWithProjection.from_pretrained(CLIP_MODELE, { dtype: "q8", progress_callback: p => { if (clipProgres) clipProgres(p); } });
+    return { T, processor, vision };
+  })().catch(e => { clipP = null; throw e; });
+  return clipP;
+}
+async function embeddingClip(src) {
+  const m = await chargerClip();
+  const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height, mm = Math.min(w, h);
+  const c = document.createElement("canvas"); c.width = c.height = 224;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(src, (w - mm) / 2, (h - mm) / 2, mm, mm, 0, 0, 224, 224);
+  const d = x.getImageData(0, 0, 224, 224);                       /* échoue si l'image n'est pas lisible (CORS) */
+  const image = new m.T.RawImage(new Uint8ClampedArray(d.data), 224, 224, 4).rgb();
+  const out = await m.vision(await m.processor(image));
+  const v = Float32Array.from(out.image_embeds.data); let n = 0; for (let i = 0; i < v.length; i++) n += v[i] * v[i];
+  n = Math.sqrt(n) || 1; for (let i = 0; i < v.length; i++) v[i] /= n;
+  return v;
+}
+const cosinus = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; };
+
+/* Compare la photo aux pochettes des meilleures suggestions, puis réordonne. Silencieux en cas d'impossibilité. */
+async function reclasserParImage(photo, cands, max) {
+  let ref; try { ref = empreinteVisuelle(photo); } catch (e) { return 0; }
+  let refClip = null;
+  if (reglages.clip) {
+    try { if (!clipP) toast("⏳ Chargement du modèle d'images (≈ 89 Mo, première fois seulement)…", 20000); refClip = await embeddingClip(photo); clipErreur = ""; }
+    catch (e) { clipErreur = e.message || String(e); refClip = null; toast("Reconnaissance avancée indisponible (" + clipErreur + ") : comparaison simple utilisée.", 6000); }
+  }
+  const tops = cands.slice(0, max || 8); let n = 0;
+  await Promise.all(tops.map(async c => {
+    for (const u of c.covers.slice(0, 2)) {
+      const im = await chargerImageLisible(u); if (!im) continue;
+      try { c.vis = ressemblance(ref, empreinteVisuelle(im)); c._im = im; n++; break; } catch (e) { /* pochette non lisible : on essaie la suivante */ }
+    }
+  }));
+  if (refClip) for (const c of tops) {                              /* un par un : le modèle tourne sur un seul fil */
+    if (!c._im) continue;
+    try { c.clip = cosinus(refClip, await embeddingClip(c._im)); } catch (e) { /* on garde la comparaison simple */ }
+  }
+  tops.forEach(c => {
+    delete c._im; if (c.vis == null) return;
+    c.scoreTexte = c.score;
+    const simple = Math.max(0, Math.min(1, (c.vis - 0.15) / 0.45));  /* 0 = sans rapport, 1 = quasi identique */
+    const ia = c.clip != null ? Math.max(0, Math.min(1, (c.clip - 0.55) / 0.35)) : null;
+    c.visCal = ia != null ? 0.7 * ia + 0.3 * simple : simple;
+    c.score = Math.min(1, 0.6 * c.score + 0.4 * c.visCal);
+  });
+  cands.sort((x, y) => (y.score - x.score) || (PRIO[x.source] - PRIO[y.source]));
+  return n;
+}
+
+/* ---- Recherche d'une image sur Google Lens, Bing, TinEye : la photo est copiée, vous la collez (Ctrl+V) ---- */
+const MOTEURS_IMAGE = [["Google Lens", "https://lens.google.com/"], ["Bing", "https://www.bing.com/visualsearch"], ["TinEye", "https://tineye.com/"]];
+function telechargerCanvas(cv, nom) {
+  cv.toBlob(b => { const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = nom || "pochette.png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }, "image/png");
+}
+function chercherImageSur(cv, url, nom) {
+  window.open(url, "_blank", "noopener");                           /* doit se faire directement au clic */
+  try {
+    const item = new ClipboardItem({ "image/png": new Promise(res => cv.toBlob(res, "image/png")) });
+    navigator.clipboard.write([item]).then(
+      () => toast("📋 Photo copiée. Dans l'onglet « " + nom + " », faites Ctrl+V (ou Cmd+V) pour la coller.", 9000),
+      () => { telechargerCanvas(cv); toast("Copie impossible : la photo a été téléchargée. Glissez-la dans la page « " + nom + " ».", 9000); });
+  } catch (e) { telechargerCanvas(cv); toast("Copie impossible : la photo a été téléchargée. Glissez-la dans la page « " + nom + " ».", 9000); }
+}
+
+function afficherChips(lignes) {
+  const z = $("res-ocr"); z.textContent = ""; if (!lignes.length) return;
+  const p = document.createElement("div"); p.textContent = "Texte lu sur la photo — cliquez pour remplir Artiste puis Titre : ";
+  lignes.forEach(l => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "petit"; b.textContent = l;
+    b.onclick = () => { const f = form.elements; if (!f.artiste.value) f.artiste.value = l; else f.titre.value = l; planifierRecherche(); };
+    p.appendChild(b);
+  });
+  z.appendChild(p);
+}
+async function analyserPhoto(src) {
+  reinitForm(); ouvrirAjout();
+  const corps = document.createElement("div");
+  const img = document.createElement("img"); img.style.cssText = "max-width:100%;max-height:260px;border-radius:10px;display:block;margin:0 auto 10px"; img.src = URL.createObjectURL(src);
+  const st = document.createElement("p"); st.textContent = "Préparation de la photo…"; corps.append(img, st);
+  dialogue({ titre: "Analyse de la photo", html: corps, boutons: [["Fermer", null]] });
+  const etat = m => { st.textContent = m; };
+  let a = "", t = "", res = null, code = "", lignes = [], notes = [];
+  try {
+    const grand = await versCanvas(src, 1600);
+    photoRef = "local:" + uid(); await kvSet("covers", photoRef, await canvasBlob(await versCanvas(src, 600)));
+    etat("Recherche d'un code-barres…");
+    code = await lireCodeBarres(grand);
+    if (code) {
+      etat("Code-barres " + code + " : recherche…");
+      res = await chercherTout("", "", 0, { code });
+      if (res.candidats.length) { a = res.candidats[0].artiste; t = res.candidats[0].titre; } else notes.push("Code-barres " + code + " : aucune correspondance.");
+    }
+    if (!res || !res.candidats.length) {
+      if (!(a || t)) {
+        etat("Lecture du texte (20 à 40 s la première fois)…");
+        try { lignes = await lireTexte(grand, etat); } catch (e) { notes.push("Lecture du texte : " + e.message); }
+      }
+      if (a || t) { etat("Recherche sur les sites…"); res = await chercherTout(a, t, 0.35); }
+      else if (lignes.length) { etat("Recherche avec le texte lu…"); res = await chercherTout(lignes.slice(0, 3).join(" "), "", 0.3, { libre: true }); }
+      if (res && res.candidats.length > 0) { etat("Comparaison visuelle avec les pochettes trouvées…"); await reclasserParImage(grand, res.candidats); }
+    }
+  } catch (e) { notes.push(e.message); }
+  await fermerDialogue();
+  if (a || t) ecrireForm({ artiste: a, titre: t });
+  coversAlt = photoRef ? [photoRef] : []; coverRef = photoRef; renderCover();
+  afficherResultats(res ? res.candidats : [], res ? res.etat : {}, a, t);
+  afficherChips(lignes);
+  if (res && res.candidats.length && (code || res.candidats[0].score >= 0.6)) utiliserCandidat(res.candidats[0]);
+  else toast((notes.length ? notes.join(" ") + " " : "") + (res && res.candidats.length ? "Choisissez la bonne suggestion." : "Rien d'identifié : la photo est gardée comme pochette, complétez Artiste et Titre."), 7000);
+}
+async function photoWebcam() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast("Webcam indisponible : utilisez « Photo depuis un fichier »."); return; }
+  let flux; try { flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 } } }); }
+  catch (e) { toast("Caméra inaccessible : " + e.message + " — utilisez « Photo depuis un fichier »."); return; }
+  const v = document.createElement("video"); v.autoplay = true; v.muted = true; v.playsInline = true; v.srcObject = flux; v.style.cssText = "width:100%;border-radius:10px;background:#000";
+  const note = document.createElement("p"); note.textContent = "Présentez la pochette (ou le code-barres au dos), bien à plat et éclairée, puis capturez.";
+  const w = document.createElement("div"); w.append(v, note);
+  let blob = null;
+  await dialogue({ titre: "Photo du vinyle", html: w, boutons: [
+    ["📸 Capturer", null, "primaire", async () => { if (!v.videoWidth) return; const c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext("2d").drawImage(v, 0, 0); blob = await canvasBlob(c, 0.92); $("modal").close(); }],
+    ["Annuler", null]] });
+  flux.getTracks().forEach(x => x.stop());
+  if (blob) { await pause(100); analyserPhoto(blob); }
+}
+
+/* =====================================================================
+   Scan d'une vidéo : détection des pochettes, identification, validation
+   ===================================================================== */
+/* Détection de formes carrées (pochettes vues de face) : contours de l'image (Sobel),
+   puis recherche des carrés dont les quatre côtés ont de forts contours. Tout se passe dans la page. */
+function detecterCarres(src) {
+  const W0 = src.width, H0 = src.height, k = Math.min(1, 320 / Math.max(W0, H0));
+  const w = Math.max(24, Math.round(W0 * k)), h = Math.max(24, Math.round(H0 * k));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const cx = c.getContext("2d", { willReadFrequently: true }); cx.drawImage(src, 0, 0, w, h);
+  const d = cx.getImageData(0, 0, w, h).data, g = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) g[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  const gx = new Float32Array(w * h), gy = new Float32Array(w * h); let somme = 0, n = 0;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = y * w + x; gx[i] = Math.abs(g[i + 1] - g[i - 1]); gy[i] = Math.abs(g[i + w] - g[i - w]); somme += gx[i] + gy[i]; n++;
+  }
+  const seuil = Math.max(14, 1.2 * somme / Math.max(1, n)), W1 = w + 1;
+  const IX = new Int32Array(W1 * (h + 1)), IY = new Int32Array(W1 * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let rx = 0, ry = 0;
+    for (let x = 0; x < w; x++) {
+      rx += gx[y * w + x] > seuil ? 1 : 0; ry += gy[y * w + x] > seuil ? 1 : 0;
+      IX[(y + 1) * W1 + x + 1] = IX[y * W1 + x + 1] + rx; IY[(y + 1) * W1 + x + 1] = IY[y * W1 + x + 1] + ry;
+    }
+  }
+  const somm = (I, x0, y0, x1, y1) => I[(y1 + 1) * W1 + x1 + 1] - I[y0 * W1 + x1 + 1] - I[(y1 + 1) * W1 + x0] + I[y0 * W1 + x0];
+  const cote = (x, y, s, r, norm) => {
+    const a = Math.max(0, x - r), b = Math.min(w - 1, x + r), e = Math.max(0, x + s - r), f = Math.min(w - 1, x + s + r);
+    const a2 = Math.max(0, y - r), b2 = Math.min(h - 1, y + r), e2 = Math.max(0, y + s - r), f2 = Math.min(h - 1, y + s + r);
+    const y1 = Math.min(h - 1, y + s), x1 = Math.min(w - 1, x + s);
+    const gche = somm(IX, a, y, b, y1) / (norm * s), droi = somm(IX, e, y, f, y1) / (norm * s);
+    const haut = somm(IY, x, a2, x1, b2) / (norm * s), bas = somm(IY, x, e2, x1, f2) / (norm * s);
+    return Math.min(1, gche, droi, haut, bas);
+  };
+  const m = Math.min(w, h), smin = Math.max(22, Math.round(0.12 * m)), smax = m - 3, cand = [];
+  for (let s = smin; s <= smax; s = Math.max(s + 1, Math.round(s * 1.04))) {
+    const pas = Math.max(1, Math.round(s / 24));
+    for (let y = 2; y + s < h - 2; y += pas) for (let x = 2; x + s < w - 2; x += pas) {
+      const sc = cote(x, y, s, 3, 4);
+      if (sc >= 0.5) cand.push({ x, y, s, sc });
+    }
+  }
+  cand.forEach(q => {  /* on préfère le grand carré à un détail intérieur, sauf s'il regroupe plusieurs pochettes (lignes de séparation à l'intérieur) */
+    const y1 = Math.min(h - 1, q.y + q.s), x1 = Math.min(w - 1, q.x + q.s); let lv = false, lh = false;
+    for (const f of [0.25, 0.333, 0.5, 0.667, 0.75]) {
+      const mx = q.x + Math.round(q.s * f), my = q.y + Math.round(q.s * f);
+      if (somm(IX, Math.max(0, mx - 1), q.y, Math.min(w - 1, mx + 1), y1) / (2.5 * q.s) > 0.6) lv = true;
+      if (somm(IY, q.x, Math.max(0, my - 1), x1, Math.min(h - 1, my + 1)) / (2.5 * q.s) > 0.6) lh = true;
+    }
+    q.rang = q.sc * Math.sqrt(q.s / smax) * (lv && lh ? 0.5 : 1);
+  });
+  cand.sort((p, q) => q.rang - p.rang);
+  const gardes = [];
+  for (const q of cand) {
+    let ok = true;
+    for (const r of gardes) {
+      const ix = Math.max(0, Math.min(q.x + q.s, r.x + r.s) - Math.max(q.x, r.x)), iy = Math.max(0, Math.min(q.y + q.s, r.y + r.s) - Math.max(q.y, r.y));
+      const inter = ix * iy, petit = Math.min(q.s, r.s) ** 2;
+      if (inter / petit > 0.5) { ok = false; break; }
+    }
+    if (ok) { gardes.push(q); if (gardes.length >= 40) break; }
+  }
+  gardes.forEach(q => {  /* affinage de la position */
+    let best = q, bs = cote(q.x, q.y, q.s, 1, 2);
+    for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) for (let ds = -4; ds <= 4; ds++) {
+      const x = q.x + dx, y = q.y + dy, s = q.s + ds;
+      if (x < 1 || y < 1 || s < 10 || x + s >= w - 1 || y + s >= h - 1) continue;
+      const v = cote(x, y, s, 1, 2); if (v > bs) { bs = v; best = { x, y, s }; }
+    }
+    q.x = best.x; q.y = best.y; q.s = best.s; q.sc = bs;
+  });
+  return gardes.filter(q => q.sc >= 0.5).map(q => ({ x: Math.round(q.x / k), y: Math.round(q.y / k), s: Math.round(q.s / k), score: q.sc }));
+}
+function signaturePochette(cv) {
+  const c = document.createElement("canvas"); c.width = 16; c.height = 16;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(cv, 0, 0, 16, 16);
+  const d = x.getImageData(0, 0, 16, 16).data, gris = new Float32Array(256); let mr = 0, mg = 0, mb = 0, mu = 0;
+  for (let i = 0; i < 256; i++) { const r = d[i * 4], gg = d[i * 4 + 1], b = d[i * 4 + 2]; gris[i] = 0.299 * r + 0.587 * gg + 0.114 * b; mu += gris[i]; mr += r; mg += gg; mb += b; }
+  mu /= 256; let v = 0; for (let i = 0; i < 256; i++) { gris[i] -= mu; v += gris[i] * gris[i]; }
+  const sd = Math.sqrt(v / 256); if (sd > 0) for (let i = 0; i < 256; i++) gris[i] /= sd;
+  return { gris, sd, rgb: [mr / 256, mg / 256, mb / 256] };
+}
+function memePochette(a, b) {
+  if (a.sd < 6 || b.sd < 6) return Math.hypot(a.rgb[0] - b.rgb[0], a.rgb[1] - b.rgb[1], a.rgb[2] - b.rgb[2]) < 30 && Math.abs(a.sd - b.sd) < 8;
+  let dot = 0; for (let i = 0; i < 256; i++) dot += a.gris[i] * b.gris[i];
+  return dot / 256 > 0.82;
+}
+function nettete(cv) {
+  const c = document.createElement("canvas"); c.width = 96; c.height = 96;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(cv, 0, 0, 96, 96);
+  const d = x.getImageData(0, 0, 96, 96).data, g = new Float32Array(96 * 96);
+  for (let i = 0; i < g.length; i++) g[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  let s = 0, s2 = 0, n = 0;
+  for (let y = 1; y < 95; y++) for (let xx = 1; xx < 95; xx++) { const i = y * 96 + xx, l = 4 * g[i] - g[i - 1] - g[i + 1] - g[i - 96] - g[i + 96]; s += l; s2 += l * l; n++; }
+  return s2 / n - (s / n) ** 2;
+}
+const attendre = (el, ev, ms) => new Promise((res, rej) => { const t = setTimeout(() => { el.removeEventListener(ev, f); rej(new Error("délai dépassé (" + ev + ")")); }, ms || 8000); const f = () => { clearTimeout(t); res(); }; el.addEventListener(ev, f, { once: true }); });
+
+function ajouterPrise(u, shot) {                                    /* garde les 3 meilleures prises, espacées d'au moins 0,9 s */
+  const proche = u.shots.find(x => Math.abs(x.tps - shot.tps) < 0.9);
+  if (proche) { if (shot.q > proche.q) Object.assign(proche, shot); } else u.shots.push(shot);
+  u.shots.sort((x, y) => y.q - x.q); u.shots.length = Math.min(3, u.shots.length);
+}
+async function scannerVideo(fichierVideo) {
+  let stop = false;
+  const corps = document.createElement("div");
+  corps.innerHTML = '<p id="sv-txt">Chargement de la vidéo…</p><progress id="sv-pg" max="1" value="0"></progress><p id="sv-nb" style="color:var(--discret);font-size:.88rem;margin-top:10px"></p>';
+  dialogue({ titre: "Analyse de la vidéo", html: corps, boutons: [["Arrêter l'analyse", "stop", "", () => { stop = true; $("sv-txt").textContent = "Arrêt en cours…"; }]] });
+  const txt = m => { $("sv-txt").textContent = m; };
+  const uniques = [], urlV = URL.createObjectURL(fichierVideo), vid = document.createElement("video");
+  let nbVues = 0;
+  try {
+    vid.muted = true; vid.playsInline = true; vid.preload = "auto"; vid.src = urlV;
+    await attendre(vid, "loadedmetadata", 15000);
+    if (!isFinite(vid.duration) || !vid.videoWidth) throw new Error("vidéo illisible dans ce navigateur (essayez un fichier MP4)");
+    const D = vid.duration, nb = Math.max(1, Math.min(240, Math.ceil(D / 0.5))), pasT = D / nb, kk = Math.min(1, 1280 / Math.max(vid.videoWidth, vid.videoHeight));
+    const frame = document.createElement("canvas"); frame.width = Math.round(vid.videoWidth * kk); frame.height = Math.round(vid.videoHeight * kk);
+    const fx = frame.getContext("2d", { willReadFrequently: true });
+    $("sv-pg").max = nb;
+    for (let i = 0; i < nb && !stop; i++) {
+      txt("Image " + (i + 1) + " / " + nb + " (" + Math.round(pasT * i) + " s sur " + Math.round(D) + " s)");
+      $("sv-pg").value = i;
+      const t = Math.min(D - 0.05, pasT * (i + 0.5));
+      if (Math.abs(vid.currentTime - t) > 0.001) { const p = attendre(vid, "seeked", 8000); vid.currentTime = t; try { await p; } catch (e) { continue; } }
+      fx.drawImage(vid, 0, 0, frame.width, frame.height);
+      for (const b of detecterCarres(frame)) {
+        if (b.s < 40) continue;
+        const cv = document.createElement("canvas"), out = Math.min(512, b.s); cv.width = cv.height = out;
+        cv.getContext("2d").drawImage(frame, b.x, b.y, b.s, b.s, 0, 0, out, out);
+        nbVues++;
+        /* qualité = netteté × taille × (carré complet)² : le score du détecteur est celui du plus faible des 4 côtés */
+        const sig = signaturePochette(cv), shot = { cv, q: nettete(cv) * Math.sqrt(b.s) * b.score * b.score, tps: pasT * i };
+        const dup = uniques.find(u => memePochette(u.sig, sig));
+        if (dup) ajouterPrise(dup, shot);
+        else if (uniques.length < 80) uniques.push({ sig, shots: [shot] });
+      }
+      $("sv-nb").textContent = uniques.length + " pochette(s) distincte(s) repérée(s)";
+      await pause(0);
+    }
+  } catch (e) { await fermerDialogue(); URL.revokeObjectURL(urlV); toast("Vidéo : " + e.message, 8000); return; }
+  URL.revokeObjectURL(urlV); vid.removeAttribute("src");
+  if (!uniques.length) { await fermerDialogue(); toast("Aucune pochette carrée détectée. Filmez de face, lentement, avec de la lumière, une étagère à la fois.", 8000); return; }
+  /* Identification : code-barres, puis texte lu sur la pochette */
+  const items = []; stop = false;
+  corps.innerHTML = '<p id="sv-txt"></p><progress id="sv-pg" max="' + uniques.length + '" value="0"></progress><p style="color:var(--discret);font-size:.85rem;margin-top:10px">Lecture du texte des pochettes (la première fois, le module de lecture se télécharge : 20 à 40 s). Vous pourrez tout vérifier ensuite.</p>';
+  for (let i = 0; i < uniques.length && !stop; i++) {
+    const u = uniques[i]; $("sv-pg").value = i; txt("Identification " + (i + 1) + " / " + uniques.length + "…");
+    const it = { shots: u.shots.map(x => x.cv), sel: 0, code: "", lignes: [], cands: [], etat: {}, notes: [] };
+    for (let k = 0; k < u.shots.length && !it.cands.length && !stop; k++) {   /* meilleure prise d'abord, puis les suivantes si rien n'est trouvé */
+      try {
+        const gros = document.createElement("canvas"); gros.width = gros.height = 640; gros.getContext("2d").drawImage(u.shots[k].cv, 0, 0, 640, 640);
+        it.code = await lireCodeBarres(gros) || "";
+        if (it.code) { const r = await chercherTout("", "", 0, { code: it.code }); it.cands = r.candidats; it.etat = r.etat; }
+        if (!it.cands.length) {
+          try { it.lignes = await lireTexte(gros); } catch (e) { it.notes.push(e.message); }
+          if (it.lignes.length) { const r = await chercherTout(it.lignes.slice(0, 3).join(" "), "", 0.3, { libre: true }); it.cands = r.candidats; it.etat = r.etat; }
+          if (it.cands.length) await reclasserParImage(gros, it.cands, 6);
+        }
+      } catch (e) { it.notes.push(e.message); }
+    }
+    items.push(it);
+  }
+  await fermerDialogue();
+  await revueVideo(items);
+}
+
+async function revueVideo(items) {
+  const corps = document.createElement("div");
+  const tete = document.createElement("div"); tete.className = "rv-tete";
+  tete.innerHTML = "<p style='margin:0'><b>" + items.length + " pochette(s)</b> repérée(s). Pour chacune : choisissez la bonne suggestion (ou corrigez Artiste / Titre puis « Chercher »), et cochez <b>Ajouter</b> si vous la voulez dans la collection.</p>" +
+    "<label style='flex-direction:row;align-items:center;gap:8px'>Ajouter comme <select id='rv-statut' style='width:auto'><option value='possede'>Possédé</option><option value='souhaite'>Souhaité</option></select></label>";
+  const grille = document.createElement("div"); grille.className = "rv-grille"; corps.append(tete, grille);
+  const btnOk = () => $("modal-pied").firstChild;
+  const maj = () => { const n = items.filter(i => i.coche && i.a.value.trim() && i.t.value.trim()).length; if (btnOk()) btnOk().textContent = "Ajouter les " + n + " vinyle(s) cochés"; };
+  const choisir = (it, idx) => {
+    it.idx = idx; const c = idx >= 0 ? it.cands[idx] : null;
+    if (c) { it.a.value = c.artiste; it.t.value = c.titre; }
+    it.info.textContent = c ? [c.annee, c.label, c.format, c.pays].filter(Boolean).join(" · ") : "";
+  };
+  items.forEach(it => {
+    const carte = document.createElement("div"); carte.className = "rv-carte";
+    const urls = it.shots.map(cv => cv.toDataURL("image/jpeg", 0.85));
+    const im = document.createElement("img"); im.src = urls[0]; im.alt = "Pochette détectée";
+    const vign = document.createElement("div"); vign.className = "rv-vign";
+    const ths = urls.map((u, k) => { const th = document.createElement("img"); th.src = u; th.alt = "Prise " + (k + 1); th.title = "Prise " + (k + 1) + " : cliquer pour la choisir";
+      th.onclick = () => { it.sel = k; im.src = urls[k]; ths.forEach((x, j) => x.classList.toggle("choisie", j === k)); }; vign.appendChild(th); return th; });
+    ths[0].classList.add("choisie");
+    const moteurs = document.createElement("div"); moteurs.className = "rv-lens";
+    const ml = document.createElement("span"); ml.textContent = "Chercher la photo choisie sur :"; moteurs.appendChild(ml);
+    MOTEURS_IMAGE.forEach(([nom, url]) => { const b = document.createElement("button"); b.type = "button"; b.className = "petit"; b.textContent = "🔎 " + nom; b.title = "Copie la photo choisie et ouvre " + nom + " : collez-la avec Ctrl+V"; b.onclick = () => chercherImageSur(it.shots[it.sel], url, nom); moteurs.appendChild(b); });
+    const sel = document.createElement("select"), a = document.createElement("input"), t = document.createElement("input"), info = document.createElement("div");
+    it.sel = sel; it.a = a; it.t = t; it.info = info; a.placeholder = "Artiste"; t.placeholder = "Titre"; info.className = "rv-info";
+    const remplirSel = () => {
+      sel.textContent = "";
+      it.cands.slice(0, 6).forEach((c, i) => { const o = document.createElement("option"); o.value = i; o.textContent = c.artiste + " — " + c.titre + " (" + SOURCES[c.source].nom + ", " + Math.round(c.score * 100) + " %" + (c.vis != null ? ", image " + Math.round(c.visCal * 100) + " %" : "") + ")"; sel.appendChild(o); });
+      const o = document.createElement("option"); o.value = -1; o.textContent = it.cands.length ? "— Aucune de ces suggestions —" : "— Rien trouvé : saisir à la main —"; sel.appendChild(o);
+    };
+    remplirSel();
+    const best = it.cands[0], sur = !!best && (it.code || best.score >= 0.6);
+    it.coche = sur; choisir(it, best ? 0 : -1); sel.value = best ? 0 : -1;
+    const lab = document.createElement("label"); lab.style.cssText = "flex-direction:row;align-items:center;gap:8px;color:var(--texte)";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = it.coche; it.cb = cb; lab.append(cb, document.createTextNode("Ajouter"));
+    cb.onchange = () => { it.coche = cb.checked; maj(); };
+    sel.onchange = () => { choisir(it, +sel.value); if (+sel.value >= 0) { cb.checked = it.coche = true; } maj(); };
+    a.oninput = t.oninput = maj;
+    const bt = document.createElement("button"); bt.type = "button"; bt.className = "petit"; bt.textContent = "🔍 Chercher";
+    bt.onclick = async () => {
+      if (!a.value.trim() && !t.value.trim()) return; bt.textContent = "…";
+      const r = await chercherTout(a.value.trim(), t.value.trim(), 0.3); it.cands = r.candidats; remplirSel();
+      if (it.cands.length) { sel.value = 0; const keepA = a.value, keepT = t.value; choisir(it, 0); a.value = keepA || a.value; t.value = keepT || t.value; cb.checked = it.coche = true; } else { sel.value = -1; info.textContent = "Aucune suggestion."; }
+      bt.textContent = "🔍 Chercher"; maj();
+    };
+    const note = document.createElement("div"); note.className = "rv-info";
+    note.textContent = it.code ? "Code-barres lu : " + it.code : it.lignes.length ? "Texte lu : " + it.lignes.slice(0, 3).join(" / ") : "Aucun texte lisible";
+    carte.append(im, vign, note, sel, a, t, info, bt, lab, moteurs); grille.appendChild(carte);
+  });
+  setTimeout(maj, 0);
+  const rep = await dialogue({ titre: "Valider les vinyles repérés", html: corps, large: true, boutons: [
+    ["Ajouter", "ok", "primaire"],
+    ["Tout cocher", null, "", () => { items.forEach(i => { i.cb.checked = i.coche = true; }); maj(); }],
+    ["Tout décocher", null, "", () => { items.forEach(i => { i.cb.checked = i.coche = false; }); maj(); }],
+    ["Annuler", null]] });
+  if (rep !== "ok") { return; }
+  const choisis = items.filter(i => i.coche && i.a.value.trim() && i.t.value.trim());
+  if (!choisis.length) { toast("Aucun vinyle coché."); return; }
+  const statut = ($("rv-statut") || {}).value || "possede";
+  toast("Ajout de " + choisis.length + " vinyle(s) et recherche des pochettes…", 8000);
+  let ajoutes = 0, doublons = 0;
+  await Promise.all(choisis.map(async it => {
+    const c = it.idx >= 0 ? it.cands[it.idx] : null;
+    const o = { statut, artiste: it.a.value.trim(), titre: it.t.value.trim(), categorie: "Divers" };
+    let officielle = "";
+    if (c) {
+      const f = fiche(c, it.cands); CHAMPS_FICHE.forEach(k => { if (f[k]) o[k] = f[k]; }); o.categorie = f.categorie;
+      try { officielle = await premiereOk(f.covers.slice(0, 3)); } catch (e) { /* on gardera la capture */ }
+    }
+    it.fin = { o, officielle };
+  }));
+  for (const it of choisis) {
+    const { o, officielle } = it.fin;
+    if (vinyles.some(x => cle(x) === cle(o) && x.statut === statut)) { doublons++; continue; }
+    if (officielle) { o.pochette = officielle; mettreEnCache(officielle); }
+    else { const ref = "local:" + uid(); await kvSet("covers", ref, await canvasBlob(it.shots[it.sel], 0.85)); o.pochette = ref; }
+    vinyles.unshift(mkVinyle(o)); ajoutes++;
+  }
+  changed(); rendre();
+  toast("✔ " + ajoutes + " vinyle(s) ajouté(s)" + (doublons ? " (" + doublons + " déjà présent(s) ignoré(s))" : "") + ".", 6000);
+}
+
+/* =====================================================================
+   Réglages et diagnostic des sources
+   ===================================================================== */
+async function ouvrirReglages() {
+  const c = document.createElement("div"); c.className = "reglage";
+  c.innerHTML =
+    "<label>Jeton Discogs (gratuit, recommandé)<input id='r-token' value='" + esc(reglages.token) + "' placeholder='collez ici votre jeton personnel'></label>" +
+    "<p style='font-size:.82rem;color:var(--discret);margin:-6px 0 0'>Discogs est la base la plus complète pour les vinyles (pressage, n° de catalogue, pays). Créez un compte sur discogs.com, puis <i>Settings → Developers → Generate new token</i>. Le jeton reste uniquement dans ce navigateur (pas dans le dossier).</p>" +
+    "<div><b>Sources interrogées</b><br>" + Object.keys(SOURCES).map(k => "<label style='flex-direction:row;align-items:center;gap:8px;font-weight:500;color:var(--texte)'><input type='checkbox' data-src='" + k + "'" + (reglages.sources[k] ? " checked" : "") + "> " + SOURCES[k].nom + "</label>").join("") + "</div>" +
+    "<div><label style='flex-direction:row;align-items:center;gap:8px;font-weight:600;color:var(--texte)'><input type='checkbox' id='r-clip'" + (reglages.clip ? " checked" : "") + "> Reconnaissance d'images avancée (CLIP, partie image seule)</label>" +
+    "<p style='font-size:.82rem;color:var(--discret);margin:4px 0 6px'>Compare votre photo aux pochettes officielles avec un petit modèle d'IA qui tourne dans votre navigateur (rien n'est envoyé à un service). Téléchargement d'environ <b>89 Mo</b> la première fois, puis conservé en cache. Désactivée par défaut ; sans elle, une comparaison plus simple (couleurs et formes) est utilisée.</p>" +
+    "<button type='button' id='r-clip-test'>⬇ Charger le modèle maintenant</button> <span id='r-clip-etat' style='font-size:.82rem;color:var(--discret)'></span></div>" +
+    "<label>Identifiant client Google (pour Google Drive)<input id='r-gid' value='" + esc(reglages.gclient) + "' placeholder='xxxx.apps.googleusercontent.com'></label>" +
+    "<label>Pays pour Apple Music (code à 2 lettres)<input id='r-pays' value='" + esc(reglages.pays) + "' maxlength='2' style='max-width:90px'></label>" +
+    "<div><button type='button' id='r-lib'>⬇ Installer la bibliothèque Excel dans mon dossier (mode hors-ligne)</button></div>" +
+    "<div><button type='button' id='r-diag'>🩺 Tester les sources</button><div class='diag' id='r-diag-res' hidden></div></div>" +
+    "<p style='font-size:.82rem;color:var(--discret)'><b>Amazon, Fnac, Cultura, Vinylmaniaque, Mondo Shop, Edition Collector…</b> n'ont pas d'accès automatique utilisable depuis une page locale. Des liens de recherche pré-remplis s'affichent sous les suggestions pour les consulter à la main.</p>";
+  const lire = () => { reglages.token = c.querySelector("#r-token").value.trim();
+    reglages.gclient = c.querySelector("#r-gid").value.trim(); reglages.pays = (c.querySelector("#r-pays").value.trim().toLowerCase() || "fr"); reglages.clip = c.querySelector("#r-clip").checked;
+    c.querySelectorAll("[data-src]").forEach(x => { reglages.sources[x.dataset.src] = x.checked; }); sauverReglages(); };
+  c.querySelector("#r-lib").onclick = () => installerBibliotheque(false);
+  c.querySelector("#r-clip-test").onclick = async () => {
+    const et = c.querySelector("#r-clip-etat"); et.textContent = "Chargement…"; clipProgres = p => { if (p && p.status === "progress" && p.total) et.textContent = "Téléchargement " + Math.round(p.loaded / p.total * 100) + " % (" + String(p.file || "").split("/").pop() + ")"; };
+    try { await chargerClip(); et.textContent = "✅ Modèle prêt (l'option sera active après « Enregistrer »)."; c.querySelector("#r-clip").checked = true; }
+    catch (e) { et.textContent = "❌ " + (e.message || e); }
+    clipProgres = null;
+  };
+  c.querySelector("#r-diag").onclick = async () => {
+    lire(); const r = c.querySelector("#r-diag-res"); r.hidden = false; r.textContent = "Test en cours (Pink Floyd — Animals)…";
+    const { candidats, etat } = await chercherTout("Pink Floyd", "Animals");
+    r.textContent = Object.entries(etat).map(([k, s]) => (s.ok ? "✅ " : "❌ ") + SOURCES[k].nom + " : " + (s.ok ? s.n + " résultat(s)" : s.msg)).join("\n") + "\n\nMeilleur résultat : " + (candidats[0] ? candidats[0].artiste + " — " + candidats[0].titre + " (" + SOURCES[candidats[0].source].nom + ")" : "aucun");
+  };
+  const rep = await dialogue({ titre: "Réglages", html: c, boutons: [["Enregistrer", "ok", "primaire"], ["Fermer", null]] });
+  if (rep === "ok") { lire(); toast("Réglages enregistrés."); }
+}
+
+/* =====================================================================
+   Thème, événements, démarrage
+   ===================================================================== */
+function appliquerTheme(t) { document.documentElement.setAttribute("data-theme", t); $("btn-theme").textContent = t === "sombre" ? "☀️" : "🌙"; }
+let themeInit = null; try { themeInit = localStorage.getItem("vinylection_theme"); } catch (e) {}
+if (!themeInit) themeInit = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "sombre" : "clair";
+appliquerTheme(themeInit);
+$("btn-theme").onclick = () => { const t = document.documentElement.getAttribute("data-theme") === "sombre" ? "clair" : "sombre"; appliquerTheme(t); try { localStorage.setItem("vinylection_theme", t); } catch (e) {} };
+
+$("btn-dossier").onclick = ouvrirDossier;
+$("btn-drive").onclick = () => fichier.drive ? menuDrive() : lierDrive();
+$("btn-photo-fichier").onclick = () => $("input-photo").click();
+$("btn-video").onclick = () => $("input-video").click();
+$("input-video").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) scannerVideo(f); });
+$("input-photo").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) analyserPhoto(f); });
+$("btn-photo-cam").onclick = photoWebcam;
+$("btn-importer").onclick = () => $("input-import").click();
+$("btn-sauver").onclick = boutonSauver;
+$("btn-reglages").onclick = ouvrirReglages;
+$("btn-completer").onclick = completerCollection;
+$("btn-export").onclick = telecharger;
+$("input-import").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) importerFichier(f); });
+$("input-fichier").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { await attendreXLSX(); const res = analyser(await f.arrayBuffer());
+    if (res.type === "ancien") { await proposerImport(res.vinyles, f.name); return; }
+    if (vinyles.length && !confirm("Remplacer la collection affichée par le contenu de « " + f.name + " » ?")) return;
+    vinyles = res.vinyles; fichier.nom = f.name; await sauverCache(); rendre(); toast(vinyles.length + " vinyle(s) chargé(s)."); }
+  catch (err) { toast(err.message, 7000); }
+});
+$("onglets").addEventListener("click", e => { const b = e.target.closest("button[data-onglet]"); if (b) { onglet = b.dataset.onglet; rendre(); } });
+function appliquerTaille(px) { $("liste").style.setProperty("--mur-taille", px + "px"); $("taille").value = px; $("taille-val").textContent = px; }
+{ let px = 170; try { px = parseInt(localStorage.getItem("vinylection_taille_mur3"), 10) || 170; } catch (e) {} appliquerTaille(px); }
+$("taille").addEventListener("input", e => { appliquerTaille(e.target.value); try { localStorage.setItem("vinylection_taille_mur3", e.target.value); } catch (err) {} });
+["recherche", "tri", "groupe", "vue"].forEach(id => $(id).addEventListener(id === "recherche" ? "input" : "change", rendre));
+window.addEventListener("beforeunload", e => { if (fichier.dirty && lie()) { e.preventDefault(); e.returnValue = ""; } });
+
+/* =====================================================================
+   Google Drive : la collection (Excel + pochettes) vit dans « Mon Drive / Vinylection »
+   Portée drive.file : l'application ne voit que les fichiers qu'elle a elle-même créés.
+   ===================================================================== */
+const DRIVE_API = "https://www.googleapis.com/drive/v3/files", DRIVE_UP = "https://www.googleapis.com/upload/drive/v3/files";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file", MIME_DOSSIER = "application/vnd.google-apps.folder";
+const MIME_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const gd = { token: "", exp: 0 };
+const idClient = () => String(GOOGLE_CLIENT_ID || reglages.gclient || "").trim();
+const jetonValide = () => !!gd.token && Date.now() < gd.exp - 60000;
+const lie = () => !!(fichier.handle || fichier.dir || fichier.drive);
+async function demanderJeton(interactif) {
+  if (!idClient()) { toast("Identifiant Google manquant : voir Réglages → Google Drive.", 6000); return false; }
+  try { await chargerScript("https://accounts.google.com/gsi/client"); } catch (e) { toast("Google injoignable : " + e.message, 6000); return false; }
+  return await new Promise(res => {
+    const tc = google.accounts.oauth2.initTokenClient({
+      client_id: idClient(), scope: DRIVE_SCOPE,
+      callback: r => {
+        if (r && r.access_token) { gd.token = r.access_token; gd.exp = Date.now() + (Number(r.expires_in) || 3600) * 1000; try { localStorage.setItem("vinylection_drive_ok", "1"); } catch (e) {} res(true); }
+        else res(false);
+      },
+      error_callback: () => res(false)
+    });
+    tc.requestAccessToken({ prompt: interactif ? "" : "none" });
+  });
+}
+async function dfetch(url, opts) {
+  if (!jetonValide()) { fichier.reco = true; majUI(); throw new Error("reconnexion"); }
+  const o = Object.assign({}, opts); o.headers = Object.assign({ Authorization: "Bearer " + gd.token }, o.headers || {});
+  const r = await fetch(url, o);
+  if (r.status === 401) { gd.token = ""; fichier.reco = true; majUI(); throw new Error("reconnexion"); }
+  if (!r.ok) throw new Error("Drive a répondu " + r.status);
+  return r;
+}
+async function dTrouver(nom, parent, mime) {
+  const q = "name='" + nom.replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "' and '" + (parent || "root") + "' in parents and trashed=false" + (mime ? " and mimeType='" + mime + "'" : "");
+  const r = await (await dfetch(DRIVE_API + "?fields=" + encodeURIComponent("files(id,name,modifiedTime)") + "&q=" + encodeURIComponent(q))).json();
+  return (r.files && r.files[0]) || null;
+}
+async function dDossier(nom, parent) {
+  const f = await dTrouver(nom, parent, MIME_DOSSIER); if (f) return f.id;
+  const meta = { name: nom, mimeType: MIME_DOSSIER }; if (parent) meta.parents = [parent];
+  return (await (await dfetch(DRIVE_API + "?fields=id", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(meta) })).json()).id;
+}
+async function dCreer(nom, parent, blob, mime) {
+  const b = "vinyl" + uid(), meta = JSON.stringify({ name: nom, parents: [parent], mimeType: mime });
+  const body = new Blob(["--" + b + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + meta + "\r\n--" + b + "\r\nContent-Type: " + mime + "\r\n\r\n", blob, "\r\n--" + b + "--"]);
+  return await (await dfetch(DRIVE_UP + "?uploadType=multipart&fields=id,modifiedTime", { method: "POST", headers: { "Content-Type": "multipart/related; boundary=" + b }, body })).json();
+}
+async function dMaj(id, blob, mime) {
+  return await (await dfetch(DRIVE_UP + "/" + id + "?uploadType=media&fields=id,modifiedTime", { method: "PATCH", headers: { "Content-Type": mime }, body: blob })).json();
+}
+const dLire = async id => await (await dfetch(DRIVE_API + "/" + id + "?alt=media")).arrayBuffer();
+const dModif = async id => (await (await dfetch(DRIVE_API + "/" + id + "?fields=modifiedTime")).json()).modifiedTime;
+function blobClasseur() { return new Blob([XLSX.write(construireClasseur(), { type: "array", bookType: "xlsx" })], { type: MIME_XLSX }); }
+function fusionner(base, autres) { autres.forEach(v => { if (!base.some(x => cle(x) === cle(v) && x.statut === v.statut)) base.push(v); }); return base; }
+
+async function lierDrive() {
+  await attendreXLSX();
+  if (typeof XLSX === "undefined") { toast("Bibliothèque Excel non chargée (Internet requis)."); return; }
+  if (!idClient()) { toast("Identifiant Google manquant : collez-le dans Réglages → Google Drive.", 7000); ouvrirReglages(); return; }
+  if (!await demanderJeton(true)) { toast("Connexion à Google annulée ou refusée.", 5000); return; }
+  try {
+    toast("Connexion à Drive…");
+    const dossier = await dDossier("Vinylection"), pochettes = await dDossier("pochettes", dossier);
+    const f = await dTrouver(NOM_XLSX, dossier);
+    let id, modif, dirty = false;
+    if (f) {
+      let res; try { res = analyser(await dLire(f.id)); } catch (e) { toast(e.message, 7000); return; }
+      if (res.type !== "plat") { toast("Le fichier Drive n'a pas le format de l'application."); return; }
+      let garde = res.vinyles;
+      if (vinyles.length && !lie()) {
+        const c = await dialogue({ titre: "Copie du navigateur", html: "<p>Cet appareil contient déjà " + vinyles.length + " vinyle(s) non liés à Drive, et Drive en contient " + garde.length + ". Que faire ?</p>",
+          boutons: [["Charger Drive (ignorer la copie)", "drive", "primaire"], ["Fusionner les deux", "fusion"], ["Annuler", null]] });
+        if (!c) return;
+        if (c === "fusion") { garde = fusionner(garde, vinyles); dirty = true; }
+      }
+      vinyles = garde; id = f.id; modif = f.modifiedTime;
+    } else { const r = await dCreer(NOM_XLSX, dossier, blobClasseur(), MIME_XLSX); id = r.id; modif = r.modifiedTime; }
+    [...urlsObjets.keys()].filter(k => k.startsWith("pochettes/") || k.startsWith("drive:")).forEach(k => urlsObjets.delete(k));
+    fichier = { handle: null, dir: null, drive: { id, dossier, pochettes, modif }, nom: NOM_XLSX, dirty, reco: false, derniere: new Date() };
+    await kvSet("kv", "dir", null); await kvSet("kv", "handle", null);
+    if (dirty) await sauvegarder(true); else await sauverCache();
+    majUI(); rendre();
+    toast(f ? "Drive connecté : " + vinyles.length + " vinyle(s)." : "Drive connecté : dossier « Vinylection » créé.");
+    rapatrierDrive();
+  } catch (e) { if (e.message !== "reconnexion") toast("Drive : " + e.message, 7000); }
+}
+let dEcrit = false, dRepete = false;
+async function sauvegarderDrive(manuel) {
+  if (!jetonValide() && !(manuel && await demanderJeton(true))) { fichier.reco = true; majUI(); return; }
+  if (dEcrit) { dRepete = true; return; }
+  dEcrit = true;
+  try {
+    await attendreXLSX();
+    const D = fichier.drive, m = await dModif(D.id);
+    if (D.modif && m !== D.modif) {
+      const c = await dialogue({ titre: "Modifié ailleurs", html: "<p>La collection a été modifiée sur Drive (depuis un autre appareil) depuis votre dernier chargement. Que faire ?</p>",
+        boutons: [["Fusionner (recommandé)", "fusion", "primaire"], ["Écraser avec ma version", "ecraser"], ["Reprendre la version Drive", "drive"]] });
+      if (c === "drive" || !c) { fichier.dirty = false; D.modif = ""; dEcrit = false; await rechargerDrive(false); return; }
+      if (c === "fusion") { const res = analyser(await dLire(D.id)); if (res.type === "plat") { vinyles = fusionner(vinyles, res.vinyles); rendre(); } }
+    }
+    const r = await dMaj(D.id, blobClasseur(), MIME_XLSX);
+    D.modif = r.modifiedTime; fichier.dirty = false; fichier.derniere = new Date(); fichier.reco = false; await sauverCache();
+  } catch (e) { if (e.message !== "reconnexion") toast("Enregistrement Drive impossible : " + e.message, 7000); }
+  finally { dEcrit = false; }
+  majUI();
+  if (dRepete) { dRepete = false; changed(); } else rapatrierDrive();
+}
+async function rechargerDrive(silencieux) {
+  if (!fichier.drive || fichier.dirty || dEcrit || !jetonValide()) return;
+  const D = fichier.drive, m = await dModif(D.id);
+  if (D.modif && m === D.modif) return;
+  const res = analyser(await dLire(D.id)); if (res.type !== "plat") return;
+  vinyles = res.vinyles; D.modif = m; fichier.derniere = new Date(); await sauverCache(); majUI(); rendre();
+  if (!silencieux) toast("Collection mise à jour depuis Drive.");
+}
+let rapatrieD = false;
+async function rapatrierDrive() {
+  if (!fichier.drive || !jetonValide() || rapatrieD || dEcrit) return 0;
+  rapatrieD = true; let n = 0;
+  try {
+    for (const v of vinyles) {
+      const p = v.pochette; if (!p) continue;
+      try {
+        let b = null;
+        if (p.startsWith("local:")) { const x = await kvGet("covers", p); if (x instanceof Blob) b = x; }
+        else if (/^https?:/i.test(p) && !essayes.has(p)) { essayes.add(p); const r = await fetch(p, { mode: "cors" }); if (r.ok) { const x = await r.blob(); if (/^image\//.test(x.type) && x.size > 1000) b = x; } }
+        if (!b) continue;
+        const jpg = await canvasBlob(await versCanvas(b, 500), 0.85);
+        const nom = (nk(v.artiste + v.titre).slice(0, 40) || "pochette") + "-" + uid().slice(-5) + ".jpg";
+        const r = await dCreer(nom, fichier.drive.pochettes, jpg, "image/jpeg");
+        v.pochette = "drive:" + r.id; await kvSet("covers", v.pochette, jpg); n++;
+      } catch (e) { if (e.message === "reconnexion") break; }
+    }
+  } finally { rapatrieD = false; }
+  if (n) { changed(); rendre(); }
+  return n;
+}
+async function menuDrive() {
+  const c = await dialogue({ titre: "Google Drive", html: "<p>Collection stockée dans « Mon Drive / Vinylection ». Dernière synchronisation : " + (fichier.derniere ? fichier.derniere.toLocaleTimeString("fr-FR") : "—") + ".</p>",
+    boutons: [["🔄 Recharger depuis Drive", "recharger", "primaire"], ["Se déconnecter de Drive", "quitter"], ["Fermer", null]] });
+  if (c === "recharger") { if (fichier.reco || !jetonValide()) await reconnecter(); else { try { await rechargerDrive(false); toast("À jour."); } catch (e) { toast(e.message); } } }
+  if (c === "quitter") {
+    try { if (gd.token && window.google) google.accounts.oauth2.revoke(gd.token); } catch (e) {}
+    gd.token = ""; fichier = { handle: null, dir: null, nom: "", dirty: false, reco: false, derniere: null };
+    await kvSet("kv", "drive", null); try { localStorage.removeItem("vinylection_drive_ok"); } catch (e) {}
+    await sauverCache(); majUI(); toast("Déconnecté de Drive (copie locale conservée).");
+  }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && fichier.drive) rechargerDrive(true).catch(() => {}); });
+setInterval(() => { if (fichier.drive && !fichier.reco && !jetonValide()) { fichier.reco = true; majUI(); } }, 30000);
+
+async function demarrer() {
+  await attendreXLSX();
+  const etat = await kvGet("kv", "etat");
+  if (etat && Array.isArray(etat.vinyles)) vinyles = etat.vinyles.map(v => Object.assign(mkVinyle({}), v));
+  const dr = await kvGet("kv", "drive");
+  if (dr && dr.id) {
+    fichier = { handle: null, dir: null, drive: dr, nom: NOM_XLSX, dirty: !!(etat && etat.dirty), reco: true, derniere: null };
+    majUI(); renderCover(); rendre();
+    let silencieux = false; try { silencieux = !!localStorage.getItem("vinylection_drive_ok"); } catch (e) {}
+    if (silencieux && await Promise.race([demanderJeton(false), pause(6000).then(() => false)])) {
+      fichier.reco = false;
+      try { if (fichier.dirty) await sauvegarder(false); else await rechargerDrive(true); rapatrierDrive(); } catch (e) { /* bandeau de reconnexion */ }
+    }
+    majUI(); rendre(); return;
+  }
+  const dirH = hasFS ? await kvGet("kv", "dir") : null;
+  const h = hasFS && !dirH ? await kvGet("kv", "handle") : null;
+  let ok = false;
+  if (dirH) {
+    fichier.dir = dirH; fichier.nom = NOM_XLSX;
+    if (await permission(dirH, false)) { try { fichier.handle = await dirH.getFileHandle(NOM_XLSX); } catch (e) { /* sera recréé à la première sauvegarde */ } ok = true; }
+    else fichier.reco = true;
+  } else if (h) {
+    fichier.handle = h; fichier.nom = h.name;
+    if (await permission(h, false)) ok = true; else fichier.reco = true;
+  }
+  fichier.dirty = !!(etat && etat.dirty);
+  if (ok && fichier.handle) {
+    if (fichier.dirty) await sauvegarder(false);
+    else { try { const f = await fichier.handle.getFile(); const res = analyser(await f.arrayBuffer()); if (res.type === "plat") vinyles = res.vinyles; } catch (e) { /* on garde la copie du navigateur */ } }
+  }
+  majUI(); renderCover(); rendre();
+  if (ok && fichier.dir) rapatrierPochettes();
+}
+demarrer();
+if ("serviceWorker" in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register("sw.js").catch(() => {});
+})();
+</script>
+</body>
+</html>
