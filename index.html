@@ -327,7 +327,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const pause = ms => new Promise(r => setTimeout(r, ms));
 const cle = v => nk(v.artiste) + "|" + nk(v.titre);
 /* Identifiant client Google (voir le guide) : à coller entre les guillemets avant de publier la page. */
-const GOOGLE_CLIENT_ID = "1026977144464-9crlftedhi2kd62rdquimvkjod36hs05.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "";
 const hasFS = "showOpenFilePicker" in window && "showSaveFilePicker" in window;
 const TYPES_XLSX = [{ description: "Classeur Excel", accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } }];
 
@@ -1791,12 +1791,14 @@ async function ouvrirReglages() {
     "<button type='button' id='r-clip-test'>⬇ Charger le modèle maintenant</button> <span id='r-clip-etat' style='font-size:.82rem;color:var(--discret)'></span></div>" +
     "<label>Identifiant client Google (pour Google Drive)<input id='r-gid' value='" + esc(reglages.gclient) + "' placeholder='xxxx.apps.googleusercontent.com'></label>" +
     "<label>Pays pour Apple Music (code à 2 lettres)<input id='r-pays' value='" + esc(reglages.pays) + "' maxlength='2' style='max-width:90px'></label>" +
+    "<div><button type='button' id='r-pdiag'>🩺 Tester les pochettes Drive</button><div class='diag' id='r-pdiag-res' hidden></div></div>" +
     "<div><button type='button' id='r-lib'>⬇ Installer la bibliothèque Excel dans mon dossier (mode hors-ligne)</button></div>" +
     "<div><button type='button' id='r-diag'>🩺 Tester les sources</button><div class='diag' id='r-diag-res' hidden></div></div>" +
     "<p style='font-size:.82rem;color:var(--discret)'><b>Amazon, Fnac, Cultura, Vinylmaniaque, Mondo Shop, Edition Collector…</b> n'ont pas d'accès automatique utilisable depuis une page locale. Des liens de recherche pré-remplis s'affichent sous les suggestions pour les consulter à la main.</p>";
   const lire = () => { reglages.token = c.querySelector("#r-token").value.trim();
     reglages.gclient = c.querySelector("#r-gid").value.trim(); preGIS(); reglages.pays = (c.querySelector("#r-pays").value.trim().toLowerCase() || "fr"); reglages.clip = c.querySelector("#r-clip").checked;
     c.querySelectorAll("[data-src]").forEach(x => { reglages.sources[x.dataset.src] = x.checked; }); sauverReglages(); };
+  c.querySelector("#r-pdiag").onclick = async () => { const r = c.querySelector("#r-pdiag-res"); r.hidden = false; r.textContent = "Test en cours…"; r.textContent = await diagPochettes(); };
   c.querySelector("#r-lib").onclick = () => installerBibliotheque(false);
   c.querySelector("#r-clip-test").onclick = async () => {
     const et = c.querySelector("#r-clip-etat"); et.textContent = "Chargement…"; clipProgres = p => { if (p && p.status === "progress" && p.total) et.textContent = "Téléchargement " + Math.round(p.loaded / p.total * 100) + " % (" + String(p.file || "").split("/").pop() + ")"; };
@@ -2003,6 +2005,32 @@ async function rapatrierDrive() {
   } finally { rapatrieD = false; }
   if (n) { changed(); rendre(); }
   return n;
+}
+const VERSION_PAGE = "2026-11-17-d";
+async function diagPochettes() {
+  const L = []; const add = t => L.push(t);
+  add("Version de la page : " + VERSION_PAGE);
+  add("Mode Drive : " + (fichier.drive ? "oui" : "NON (pas connecté à Drive)"));
+  add("Jeton Google : " + (jetonValide() ? "valide (" + Math.round((gd.exp - Date.now()) / 60000) + " min restantes)" : "ABSENT ou expiré → cliquez sur « Se reconnecter »"));
+  const t = { drive: 0, web: 0, local: 0, dossier: 0, vide: 0 };
+  vinyles.forEach(v => { const p = v.pochette || ""; if (!p) t.vide++; else if (p.startsWith("drive:")) t.drive++; else if (/^https?:/i.test(p)) t.web++; else if (p.startsWith("local:")) t.local++; else t.dossier++; });
+  add("Vinyles : " + vinyles.length + " — pochettes « drive: » " + t.drive + ", adresses Internet " + t.web + ", locales (pas encore envoyées) " + t.local + ", ancien dossier " + t.dossier + ", sans pochette " + t.vide);
+  const ex = vinyles.find(v => (v.pochette || "").startsWith("drive:"));
+  if (!ex) add("Aucune pochette « drive: » dans la collection : l'envoi vers Drive n'a pas été enregistré dans l'Excel.");
+  else {
+    const ref = ex.pochette; add("Exemple : " + ex.artiste + " — " + ex.titre + " → " + ref);
+    const cache = await kvGet("covers", ref); add("Copie dans ce navigateur : " + (cache instanceof Blob ? "oui (" + cache.size + " octets)" : "non"));
+    if (jetonValide()) {
+      try {
+        const r = await fetch(DRIVE_API + "/" + ref.slice(6) + "?alt=media", { headers: { Authorization: "Bearer " + gd.token } });
+        add("Téléchargement depuis Drive : HTTP " + r.status + (r.ok ? "" : " — " + (await r.text()).slice(0, 160)));
+        if (r.ok) { const b = await r.blob(); add("Reçu : " + b.size + " octets, type « " + b.type + " »");
+          try { const bm = await createImageBitmap(b); add("Décodage de l'image : OK (" + bm.width + "×" + bm.height + ")"); } catch (e) { add("Décodage de l'image : ÉCHEC (" + e.message + ") — fichier corrompu ou vide"); } }
+      } catch (e) { add("Téléchargement depuis Drive : ERREUR " + e.message); }
+    } else add("Téléchargement non testé (pas de jeton).");
+    try { const m = await dfetch(DRIVE_API + "?fields=" + encodeURIComponent("files(id,name,size)") + "&pageSize=5&q=" + encodeURIComponent("'" + fichier.drive.pochettes + "' in parents and trashed=false")); const j = await m.json(); add("Fichiers visibles dans le dossier pochettes : " + (j.files || []).length + (j.files && j.files[0] ? " (ex. " + j.files[0].name + ", " + j.files[0].size + " octets)" : "")); } catch (e) { add("Liste du dossier pochettes : " + e.message); }
+  }
+  return L.join("\n");
 }
 async function menuDrive() {
   const c = await dialogue({ titre: "Google Drive", html: "<p>Collection stockée dans « Mon Drive / Vinylection ». Dernière synchronisation : " + (fichier.derniere ? fichier.derniere.toLocaleTimeString("fr-FR") : "—") + ".</p>",
